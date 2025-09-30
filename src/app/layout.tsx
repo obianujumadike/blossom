@@ -15,21 +15,21 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Blossom",
-  description: "Blossom - A beautiful and intuitive app experience",
+  title: "bossom",
+  description: "bossom - A beautiful and intuitive app experience",
   generator: "Next.js",
   manifest: "/manifest.json",
-  keywords: ["blossom", "app", "nextjs", "pwa"],
+  keywords: ["bossom", "app", "nextjs", "pwa"],
   themeColor: [
     { media: "(prefers-color-scheme: dark)", color: "#fff" },
     { media: "(prefers-color-scheme: light)", color: "#ED205A" },
   ],
   authors: [
-    { name: "Blossom Team" },
+    { name: "bossom Team" },
   ],
   icons: [
-    { rel: "apple-touch-icon", url: "icon-blossom-192.svg" },
-    { rel: "icon", url: "icon-blossom-192.svg" },
+    { rel: "apple-touch-icon", url: "icon-bossom-192.svg" },
+    { rel: "icon", url: "icon-bossom-192.svg" },
   ],
 };
 
@@ -55,7 +55,7 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Blossom" />
+        <meta name="apple-mobile-web-app-title" content="bossom" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-config" content="/browserconfig.xml" />
         <meta name="msapplication-TileColor" content="#ED205A" />
