@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { ReactNode } from "react";
+import { AuthProvider } from "@/contexts/AuthContext";
 import "./globals.css";
 
 const geistSans = localFont({
@@ -15,28 +16,28 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "bossom",
-  description: "bossom - A beautiful and intuitive app experience",
+  title: "Bossom - AI-Powered Mammogram Analysis",
+  description: "Advanced AI-powered mammogram analysis platform for healthcare professionals",
   generator: "Next.js",
   manifest: "/manifest.json",
-  keywords: ["bossom", "app", "nextjs", "pwa"],
+  keywords: ["bossom", "mammogram", "AI", "medical imaging", "healthcare", "nextjs", "pwa"],
   themeColor: [
-    { media: "(prefers-color-scheme: dark)", color: "#fff" },
+    { media: "(prefers-color-scheme: dark)", color: "#1f2937" },
     { media: "(prefers-color-scheme: light)", color: "#ED205A" },
   ],
   authors: [
-    { name: "bossom Team" },
+    { name: "Bossom Team" },
   ],
   icons: [
-    { rel: "apple-touch-icon", url: "icon-bossom-192.svg" },
-    { rel: "icon", url: "icon-bossom-192.svg" },
+    { rel: "apple-touch-icon", url: "/icon-blossom-192.svg" },
+    { rel: "icon", url: "/icon.svg" },
   ],
 };
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: dark)", color: "#fff" },
-    { media: "(prefers-color-scheme: light)", color: "#4F46E5" },
+    { media: "(prefers-color-scheme: dark)", color: "#1f2937" },
+    { media: "(prefers-color-scheme: light)", color: "#ED205A" },
   ],
   width: "device-width",
   initialScale: 1,
@@ -64,7 +65,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );
