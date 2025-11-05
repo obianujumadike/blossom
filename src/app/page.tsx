@@ -11,12 +11,12 @@ export default function Home() {
           <span className="text-2xl font-bold text-gray-900">Bossom</span>
         </div>
         <div className="flex items-center space-x-6">
-          <Link
+          {/* <Link
             href="/cases"
             className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
           >
             Cases
-          </Link>
+          </Link> */}
           <Link
             href="/login"
             className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
@@ -61,12 +61,12 @@ export default function Home() {
             >
               Start Free Trial
             </Link>
-            <Link
+            {/* <Link
               href="/demo"
               className="bg-white border-2 border-gray-200 text-gray-700 px-8 py-4 rounded-2xl hover:border-pink-300 hover:bg-pink-50 transition-all duration-200 font-semibold text-lg"
             >
               View Demo
-            </Link>
+            </Link> */}
           </div>
 
           {/* Hero Visual - Matching mockup style */}
