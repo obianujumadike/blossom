@@ -137,7 +137,7 @@ const mockAnalysis: AnalysisResult = {
   ]
 }
 
-export default function AnalysisPage({ params }: { params: { id: string } }) {
+export default function AnalysisPage() {
   const router = useRouter()
   const [analysis] = useState<AnalysisResult>(mockAnalysis)
   const [selectedImage, setSelectedImage] = useState(analysis.images[0])
