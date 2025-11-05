@@ -467,8 +467,7 @@ export default function NotificationsPage() {
           </div>
         )}
 
-        {/* Settings Tab - Commented Out */}
-        {/* 
+        {/* Settings Tab - Commented Out 
         {activeTab === 'settings' && (
           <div className="space-y-6">
             <div className={componentStyles.card.elevated}>
@@ -508,7 +507,6 @@ export default function NotificationsPage() {
               </div>
             </div>
 
-            {/* Push Notifications */}
             <div className={componentStyles.card.elevated}>
               <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center gap-2">
@@ -545,7 +543,6 @@ export default function NotificationsPage() {
               </div>
             </div>
 
-            {/* Notification Frequency */}
             <div className={componentStyles.card.elevated}>
               <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center gap-2">
@@ -616,7 +613,6 @@ export default function NotificationsPage() {
               </div>
             </div>
 
-            {/* Save Settings */}
             <div className="flex justify-end">
               <button className={componentStyles.button.primary}>
                 Save Settings
@@ -624,7 +620,7 @@ export default function NotificationsPage() {
             </div>
           </div>
         )}
-        */
+        */}
       </div>
     </div>
   )
