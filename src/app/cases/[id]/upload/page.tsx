@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import { useDropzone } from 'react-dropzone'
 import { 
   FaArrowLeft, 
@@ -32,8 +32,9 @@ interface UploadedFile {
   }
 }
 
-export default function UploadPage({ params }: { params: { id: string } }) {
+export default function UploadPage() {
   const router = useRouter()
+  const params = useParams()
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
   const [isProcessing, setIsProcessing] = useState(false)
 
