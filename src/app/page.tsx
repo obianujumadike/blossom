@@ -240,6 +240,8 @@ export default function Home() {
               <ul className="space-y-3 text-gray-400">
                 <li><a href="#features" className="hover:text-white transition-colors">Features</a></li>
                 <li><Link href="/signup" className="hover:text-white transition-colors">Demo</Link></li>
+                <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+                <li><Link href="/terms" className="hover:text-white transition-colors">Terms & Conditions</Link></li>
               </ul>
             </div>
           </div>
