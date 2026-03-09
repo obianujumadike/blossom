@@ -28,47 +28,29 @@ export function redirectTo404() {
   redirect('/not-found')
 }
 
+export type UserRole = 'admin' | 'radiologist'
+
+const roleHierarchy: Record<UserRole, number> = {
+  admin: 2,
+  radiologist: 1,
+}
+
 // Helper function to check if user has required permissions
 export function checkMedicalAccess(userRole: string, requiredRoles: string[]): boolean {
-  const roleHierarchy = {
-    'super_admin': 10,
-    'admin': 9,
-    'medical_director': 8,
-    'senior_radiologist': 7,
-    'radiologist': 6,
-    'resident': 5,
-    'nurse_practitioner': 4,
-    'nurse': 3,
-    'technician': 2,
-    'viewer': 1,
-    'guest': 0
-  }
-  
-  const userLevel = roleHierarchy[userRole as keyof typeof roleHierarchy] || 0
-  const requiredLevel = Math.min(...requiredRoles.map(role => 
-    roleHierarchy[role as keyof typeof roleHierarchy] || 10
+  const userLevel = roleHierarchy[userRole as UserRole] || 0
+  const requiredLevel = Math.min(...requiredRoles.map(role =>
+    roleHierarchy[role as UserRole] || 10
   ))
-  
   return userLevel >= requiredLevel
 }
 
 // Helper to get user-friendly role names
 export function getRoleName(role: string): string {
-  const roleNames = {
-    'super_admin': 'Super Administrator',
-    'admin': 'Administrator',
-    'medical_director': 'Medical Director',
-    'senior_radiologist': 'Senior Radiologist',
-    'radiologist': 'Radiologist',
-    'resident': 'Medical Resident',
-    'nurse_practitioner': 'Nurse Practitioner',
-    'nurse': 'Registered Nurse',
-    'technician': 'Medical Technician',
-    'viewer': 'Viewer',
-    'guest': 'Guest'
+  const roleNames: Record<UserRole, string> = {
+    admin: 'Administrator',
+    radiologist: 'Radiologist',
   }
-  
-  return roleNames[role as keyof typeof roleNames] || 'Unknown Role'
+  return roleNames[role as UserRole] || 'Unknown Role'
 }
 
 // Helper to format error messages for logging
