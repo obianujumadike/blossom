@@ -42,10 +42,9 @@ export default function UploadPage() {
     const newFiles: UploadedFile[] = acceptedFiles.map((file) => ({
       id: Math.random().toString(36).substr(2, 9),
       file,
-      status: 'uploading',
+      status: 'uploading' as const,
       progress: 0,
       metadata: {
-        // Mock metadata extraction
         patientName: 'Unknown',
         studyDate: new Date().toISOString().split('T')[0],
         modality: 'MG',
@@ -55,31 +54,53 @@ export default function UploadPage() {
 
     setUploadedFiles(prev => [...prev, ...newFiles])
 
-    // Simulate upload progress
+    // Upload each file to the real API
     newFiles.forEach((uploadFile) => {
-      simulateUpload(uploadFile.id)
+      uploadFileToApi(uploadFile)
     })
-  }, [])
+  }, [params.id])
 
-  const simulateUpload = (fileId: string) => {
-    const interval = setInterval(() => {
-      setUploadedFiles(prev => prev.map(file => {
-        if (file.id === fileId) {
-          const newProgress = Math.min(file.progress + Math.random() * 30, 100)
-          const isComplete = newProgress >= 100
-          
-          return {
-            ...file,
-            progress: newProgress,
-            status: isComplete ? (Math.random() > 0.1 ? 'success' : 'error') : 'uploading',
-            error: isComplete && Math.random() <= 0.1 ? 'Failed to process DICOM file' : undefined
-          }
-        }
-        return file
-      }))
-    }, 200)
+  const uploadFileToApi = async (uploadFile: UploadedFile) => {
+    const form = new FormData()
+    form.append('file', uploadFile.file)
+    form.append('laterality', 'Left')
 
-    setTimeout(() => clearInterval(interval), 3000)
+    // Progress simulation (real progress requires XMLHttpRequest)
+    const progressInterval = setInterval(() => {
+      setUploadedFiles(prev => prev.map(f =>
+        f.id === uploadFile.id && f.status === 'uploading'
+          ? { ...f, progress: Math.min(f.progress + 15, 90) }
+          : f
+      ))
+    }, 300)
+
+    try {
+      const res = await fetch(`/api/cases/${params.id}/images`, {
+        method: 'POST',
+        body: form,
+      })
+
+      clearInterval(progressInterval)
+
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || 'Upload failed')
+      }
+
+      const image = await res.json()
+      setUploadedFiles(prev => prev.map(f =>
+        f.id === uploadFile.id
+          ? { ...f, progress: 100, status: 'success' as const, serverImageId: image.id }
+          : f
+      ))
+    } catch (err) {
+      clearInterval(progressInterval)
+      setUploadedFiles(prev => prev.map(f =>
+        f.id === uploadFile.id
+          ? { ...f, status: 'error' as const, error: err instanceof Error ? err.message : 'Upload failed' }
+          : f
+      ))
+    }
   }
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -97,10 +118,7 @@ export default function UploadPage() {
 
   const handleStartAnalysis = () => {
     setIsProcessing(true)
-    // Simulate analysis processing
-    setTimeout(() => {
-      router.push(`/cases/${params.id}/analysis`)
-    }, 2000)
+    router.push(`/cases/${params.id}/analysis`)
   }
 
   const successfulFiles = uploadedFiles.filter(file => file.status === 'success')
