@@ -1,16 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { 
   FaPlus, 
   FaSearch, 
-  FaFilter, 
   FaEye, 
-  FaEdit, 
-  FaDownload,
-  FaCalendarAlt,
+  FaUpload,
   FaUser,
   FaExclamationTriangle,
   FaCheckCircle,
@@ -19,95 +16,57 @@ import {
 import { BossomLogo } from '@/components/ui/BossomLogo'
 import { componentStyles } from '@/lib/design-system'
 
-interface PatientCase {
+interface CaseRecord {
   id: string
-  patientName: string
-  medicalRecordNumber: string
-  dateCreated: string
-  lastUpdated: string
-  status: 'pending' | 'in-progress' | 'completed' | 'review-needed'
-  priority: 'low' | 'medium' | 'high' | 'urgent'
-  referringPhysician: string
-  age: number
-  hasImages: boolean
-  aiAnalysisComplete: boolean
-  biradsScore?: string
-  findings?: string
+  case_number: string
+  status: string
+  priority: string
+  study_date: string
+  clinical_indication: string | null
+  referring_physician: string | null
+  created_at: string
+  patients: { patient_id: string; age: number; gender: string } | null
+  images: Array<{ id: string }> | null
+  analyses: Array<{ id: string; birads_category: number | null; confidence_score: number | null; analysis_status: string }> | null
 }
 
-// Mock data - in a real app, this would come from your database
-const mockCases: PatientCase[] = [
-  {
-    id: '1',
-    patientName: 'Sarah Johnson',
-    medicalRecordNumber: 'MRN-2024-001',
-    dateCreated: '2024-10-29',
-    lastUpdated: '2024-10-29',
-    status: 'review-needed',
-    priority: 'urgent',
-    referringPhysician: 'Dr. Smith',
-    age: 45,
-    hasImages: true,
-    aiAnalysisComplete: true,
-    biradsScore: 'BI-RADS 4',
-    findings: 'Suspicious mass detected in upper outer quadrant'
-  },
-  {
-    id: '2',
-    patientName: 'Maria Garcia',
-    medicalRecordNumber: 'MRN-2024-002',
-    dateCreated: '2024-10-28',
-    lastUpdated: '2024-10-29',
-    status: 'in-progress',
-    priority: 'medium',
-    referringPhysician: 'Dr. Johnson',
-    age: 52,
-    hasImages: true,
-    aiAnalysisComplete: false
-  },
-  {
-    id: '3',
-    patientName: 'Jennifer Davis',
-    medicalRecordNumber: 'MRN-2024-003',
-    dateCreated: '2024-10-27',
-    lastUpdated: '2024-10-27',
-    status: 'completed',
-    priority: 'low',
-    referringPhysician: 'Dr. Wilson',
-    age: 38,
-    hasImages: true,
-    aiAnalysisComplete: true,
-    biradsScore: 'BI-RADS 1',
-    findings: 'No abnormalities detected'
-  }
-]
-
 export default function CasesPage() {
-  const router = useRouter()
-  const [cases, setCases] = useState<PatientCase[]>(mockCases)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [priorityFilter, setPriorityFilter] = useState<string>('all')
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-bossom-pink-600"></div></div>}>
+      <CasesContent />
+    </Suspense>
+  )
+}
 
-  const filteredCases = cases.filter(case_ => {
-    const matchesSearch = case_.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         case_.medicalRecordNumber.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = statusFilter === 'all' || case_.status === statusFilter
-    const matchesPriority = priorityFilter === 'all' || case_.priority === priorityFilter
-    
-    return matchesSearch && matchesStatus && matchesPriority
-  })
+function CasesContent() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const [cases, setCases] = useState<CaseRecord[]>([])
+  const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || 'all')
+  const [priorityFilter, setPriorityFilter] = useState('all')
+
+  useEffect(() => {
+    const params = new URLSearchParams()
+    if (statusFilter !== 'all') params.set('status', statusFilter)
+    if (priorityFilter !== 'all') params.set('priority', priorityFilter)
+    if (searchTerm) params.set('search', searchTerm)
+
+    setLoading(true)
+    fetch(`/api/cases?${params}`)
+      .then(r => r.json())
+      .then(d => setCases(Array.isArray(d) ? d : []))
+      .catch(() => setCases([]))
+      .finally(() => setLoading(false))
+  }, [statusFilter, priorityFilter, searchTerm])
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'pending':
-        return <FaClock className="w-4 h-4" />
-      case 'in-progress':
-        return <FaClock className="w-4 h-4" />
       case 'completed':
         return <FaCheckCircle className="w-4 h-4" />
-      case 'review-needed':
-        return <FaExclamationTriangle className="w-4 h-4" />
+      case 'in_progress':
+        return <FaClock className="w-4 h-4" />
       default:
         return <FaClock className="w-4 h-4" />
     }
@@ -117,12 +76,10 @@ export default function CasesPage() {
     switch (status) {
       case 'pending':
         return 'text-gray-600 bg-gray-100'
-      case 'in-progress':
+      case 'in_progress':
         return 'text-blue-600 bg-blue-100'
       case 'completed':
         return 'text-green-600 bg-green-100'
-      case 'review-needed':
-        return 'text-red-600 bg-red-100'
       default:
         return 'text-gray-600 bg-gray-100'
     }
@@ -132,7 +89,7 @@ export default function CasesPage() {
     switch (priority) {
       case 'low':
         return 'text-green-600 bg-green-100'
-      case 'medium':
+      case 'normal':
         return 'text-yellow-600 bg-yellow-100'
       case 'high':
         return 'text-orange-600 bg-orange-100'
@@ -193,9 +150,8 @@ export default function CasesPage() {
               >
                 <option value="all">All Statuses</option>
                 <option value="pending">Pending</option>
-                <option value="in-progress">In Progress</option>
+                <option value="in_progress">In Progress</option>
                 <option value="completed">Completed</option>
-                <option value="review-needed">Review Needed</option>
               </select>
             </div>
 
@@ -209,7 +165,7 @@ export default function CasesPage() {
                 <option value="all">All Priorities</option>
                 <option value="urgent">Urgent</option>
                 <option value="high">High</option>
-                <option value="medium">Medium</option>
+                <option value="normal">Normal</option>
                 <option value="low">Low</option>
               </select>
             </div>
@@ -218,7 +174,11 @@ export default function CasesPage() {
 
         {/* Cases Grid */}
         <div className="grid gap-6">
-          {filteredCases.length === 0 ? (
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-bossom-pink-600"></div>
+            </div>
+          ) : cases.length === 0 ? (
             <div className="text-center py-12">
               <FaUser className="mx-auto h-12 w-12 text-gray-400" />
               <h3 className="mt-2 text-sm font-medium text-gray-900">No cases found</h3>
@@ -239,90 +199,83 @@ export default function CasesPage() {
               </div>
             </div>
           ) : (
-            filteredCases.map((case_) => (
-              <div key={case_.id} className={`${componentStyles.card.interactive} p-6`}>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-start gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-lg font-semibold text-gray-900">
-                            {case_.patientName}
-                          </h3>
-                          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(case_.priority)}`}>
-                            {case_.priority.charAt(0).toUpperCase() + case_.priority.slice(1)}
-                          </span>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-gray-600">
-                          <div>
-                            <span className="font-medium">MRN:</span> {case_.medicalRecordNumber}
+            cases.map((c) => {
+              const birads = c.analyses?.find(a => a.birads_category !== null)
+              const imageCount = c.images?.length ?? 0
+              return (
+                <div key={c.id} className={`${componentStyles.card.interactive} p-6`}>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-start gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="text-lg font-semibold text-gray-900">
+                              {c.case_number}
+                            </h3>
+                            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(c.priority)}`}>
+                              {c.priority.charAt(0).toUpperCase() + c.priority.slice(1)}
+                            </span>
                           </div>
-                          <div>
-                            <span className="font-medium">Age:</span> {case_.age}
+                          
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-gray-600">
+                            <div>
+                              <span className="font-medium">Patient:</span> {c.patients?.patient_id ?? 'N/A'}
+                            </div>
+                            <div>
+                              <span className="font-medium">Age:</span> {c.patients?.age ?? 'N/A'}
+                            </div>
+                            <div>
+                              <span className="font-medium">Physician:</span> {c.referring_physician ?? 'N/A'}
+                            </div>
+                            <div>
+                              <span className="font-medium">Date:</span> {new Date(c.study_date).toLocaleDateString()}
+                            </div>
                           </div>
-                          <div>
-                            <span className="font-medium">Physician:</span> {case_.referringPhysician}
-                          </div>
-                          <div>
-                            <span className="font-medium">Created:</span> {new Date(case_.dateCreated).toLocaleDateString()}
-                          </div>
-                        </div>
 
-                        {case_.biradsScore && (
-                          <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="font-medium text-gray-900">{case_.biradsScore}</span>
-                              {case_.aiAnalysisComplete && (
+                          {birads && (
+                            <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-medium text-gray-900">BI-RADS {birads.birads_category}</span>
                                 <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
                                   AI Analysis Complete
                                 </span>
-                              )}
+                              </div>
                             </div>
-                            {case_.findings && (
-                              <p className="text-sm text-gray-600">{case_.findings}</p>
+                          )}
+                        </div>
+
+                        <div className="flex flex-col items-end gap-3">
+                          <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(c.status)}`}>
+                            {getStatusIcon(c.status)}
+                            {c.status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                          </span>
+
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => router.push(`/cases/${c.id}/upload`)}
+                              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                              title={imageCount > 0 ? 'View Images' : 'Upload Images'}
+                            >
+                              <FaUpload className="w-4 h-4" />
+                            </button>
+                            
+                            {imageCount > 0 && (
+                              <button
+                                onClick={() => router.push(`/cases/${c.id}/analysis`)}
+                                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                                title="View Analysis"
+                              >
+                                <FaEye className="w-4 h-4" />
+                              </button>
                             )}
                           </div>
-                        )}
-                      </div>
-
-                      <div className="flex flex-col items-end gap-3">
-                        <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(case_.status)}`}>
-                          {getStatusIcon(case_.status)}
-                          {case_.status.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                        </span>
-
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => router.push(`/cases/${case_.id}`)}
-                            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                            title="View Case"
-                          >
-                            <FaEye className="w-4 h-4" />
-                          </button>
-                          
-                          <button
-                            onClick={() => router.push(`/cases/${case_.id}/edit`)}
-                            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                            title="Edit Case"
-                          >
-                            <FaEdit className="w-4 h-4" />
-                          </button>
-                          
-                          <button
-                            onClick={() => {/* Handle download */}}
-                            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                            title="Download Report"
-                          >
-                            <FaDownload className="w-4 h-4" />
-                          </button>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))
+              )
+            })
           )}
         </div>
       </div>

@@ -4,70 +4,59 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 
-export async function signInWithGoogle() {
-  const supabase = await createClient()
-  
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback`,
-    },
-  })
+// --- Validation helpers ---
 
-  if (error) {
-    console.error('Google sign in error:', error)
-    return { error: error.message }
-  }
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const MIN_PASSWORD_LENGTH = 8
 
-  if (data.url) {
-    redirect(data.url)
-  }
-
-  return { error: 'Failed to generate OAuth URL' }
+function validateEmail(email: string): string | null {
+  if (!email) return 'Email is required'
+  if (!EMAIL_RE.test(email)) return 'Invalid email address'
+  return null
 }
 
-export async function signUpWithGoogle() {
-  // Google OAuth handles both signup and signin
-  return signInWithGoogle()
+function validatePassword(password: string): string | null {
+  if (!password) return 'Password is required'
+  if (password.length < MIN_PASSWORD_LENGTH) return `Password must be at least ${MIN_PASSWORD_LENGTH} characters`
+  return null
 }
+
+// --- Auth actions ---
 
 export async function signInWithEmail(formData: FormData) {
+  const email = (formData.get('email') as string ?? '').trim()
+  const password = formData.get('password') as string ?? ''
+
+  const emailErr = validateEmail(email)
+  if (emailErr) return { error: emailErr }
+  const pwErr = validatePassword(password)
+  if (pwErr) return { error: pwErr }
+
   const supabase = await createClient()
+  const { error } = await supabase.auth.signInWithPassword({ email, password })
 
-  const email = formData.get('email') as string
-  const password = formData.get('password') as string
-
-  if (!email || !password) {
-    return { error: 'Email and password are required' }
-  }
-
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  })
-
-  if (error) {
-    return { error: error.message }
-  }
+  if (error) return { error: error.message }
 
   revalidatePath('/', 'layout')
   redirect('/dashboard')
 }
 
 export async function signUpWithEmail(formData: FormData) {
+  const email = (formData.get('email') as string ?? '').trim()
+  const password = formData.get('password') as string ?? ''
+  const fullName = (formData.get('fullName') as string ?? '').trim()
+  const medicalLicense = (formData.get('medicalLicense') as string ?? '').trim()
+  const specialization = (formData.get('specialization') as string ?? '').trim()
+  const hospitalAffiliation = (formData.get('hospitalAffiliation') as string ?? '').trim()
+
+  const emailErr = validateEmail(email)
+  if (emailErr) return { error: emailErr }
+  const pwErr = validatePassword(password)
+  if (pwErr) return { error: pwErr }
+  if (!fullName) return { error: 'Full name is required' }
+  if (!medicalLicense) return { error: 'Medical license number is required' }
+
   const supabase = await createClient()
-
-  const email = formData.get('email') as string
-  const password = formData.get('password') as string
-  const fullName = formData.get('fullName') as string
-  const medicalLicense = formData.get('medicalLicense') as string
-  const specialization = formData.get('specialization') as string
-  const hospitalAffiliation = formData.get('hospitalAffiliation') as string
-
-  if (!email || !password) {
-    return { error: 'Email and password are required' }
-  }
-
   const { error } = await supabase.auth.signUp({
     email,
     password,
@@ -78,25 +67,35 @@ export async function signUpWithEmail(formData: FormData) {
         medical_license_number: medicalLicense,
         specialization: specialization || 'Radiology',
         hospital_affiliation: hospitalAffiliation,
+        role: 'radiologist',
       },
     },
   })
 
-  if (error) {
-    return { error: error.message }
-  }
+  if (error) return { error: error.message }
 
   return { success: true, message: 'Check your email to verify your account' }
 }
 
+export async function resetPassword(formData: FormData) {
+  const email = (formData.get('email') as string ?? '').trim()
+  const emailErr = validateEmail(email)
+  if (emailErr) return { error: emailErr }
+
+  const supabase = await createClient()
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback?next=/settings/security`,
+  })
+
+  if (error) return { error: error.message }
+  return { success: true, message: 'Check your email for a password reset link' }
+}
+
 export async function signOut() {
   const supabase = await createClient()
-
   const { error } = await supabase.auth.signOut()
 
-  if (error) {
-    return { error: error.message }
-  }
+  if (error) return { error: error.message }
 
   revalidatePath('/', 'layout')
   redirect('/login')

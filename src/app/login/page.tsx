@@ -2,27 +2,15 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { FaGoogle, FaEye, FaEyeSlash } from 'react-icons/fa'
+import { FaEye, FaEyeSlash } from 'react-icons/fa'
 import { BossomLogo } from '@/components/ui/BossomLogo'
 import { componentStyles } from '@/lib/design-system'
-import { signInWithGoogle, signInWithEmail } from '@/app/auth/actions'
+import { signInWithEmail } from '@/app/auth/actions'
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-
-  const handleGoogleLogin = async () => {
-    setLoading(true)
-    setError('')
-    
-    try {
-      await signInWithGoogle()
-    } catch (error: any) {
-      setError(error.message || 'Failed to sign in with Google')
-      setLoading(false)
-    }
-  }
 
   const handleEmailLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -61,28 +49,6 @@ export default function LoginPage() {
               <p className="text-red-600 text-sm">{error}</p>
             </div>
           )}
-
-          {/* Google Login Button */}
-          <button
-            onClick={handleGoogleLogin}
-            disabled={loading}
-            className={`${componentStyles.button.outline} w-full mb-6 flex items-center justify-center gap-3 ${
-              loading ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
-          >
-            <FaGoogle className="text-red-500" />
-            {loading ? 'Signing in...' : 'Continue with Google'}
-          </button>
-
-          {/* Divider */}
-          <div className="relative mb-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or continue with email</span>
-            </div>
-          </div>
 
           {/* Email Login Form */}
           <form onSubmit={handleEmailLogin} className="space-y-4">

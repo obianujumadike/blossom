@@ -1,23 +1,37 @@
 {
+  "id": "/",
   "name": "Bossom - AI-Powered Mammogram Analysis",
   "short_name": "Bossom",
   "description": "Advanced AI-powered mammogram analysis platform for healthcare professionals",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#ED205A",
   "icons": [
     {
-      "src": "/icon-blossom-192.svg",
+      "src": "/icon-192x192.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
-      "purpose": "maskable any"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "/icon-blossom-512.svg", 
+      "src": "/icon-512x512.png",
       "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-blossom-512.svg",
+      "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "maskable any"
+      "purpose": "any"
     }
   ],
   "orientation": "portrait-primary",

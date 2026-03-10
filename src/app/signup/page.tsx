@@ -1,11 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { FcGoogle } from 'react-icons/fc'
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai'
 import Link from 'next/link'
 import { BossomLogo } from '@/components/ui/BossomLogo'
-import { signUpWithGoogle, signUpWithEmail } from '@/app/auth/actions'
+import { signUpWithEmail } from '@/app/auth/actions'
 
 export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false)
@@ -13,18 +12,6 @@ export default function SignupPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-
-  const handleGoogleSignup = async () => {
-    setIsLoading(true)
-    setError('')
-    
-    try {
-      await signUpWithGoogle()
-    } catch (error: any) {
-      setError(error.message || 'Failed to sign up with Google')
-      setIsLoading(false)
-    }
-  }
 
   const handleEmailSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -84,25 +71,6 @@ export default function SignupPage() {
             </div>
           )}
           
-          {/* Google Signup Button */}
-          <button
-            onClick={handleGoogleSignup}
-            disabled={isLoading}
-            className="w-full flex items-center justify-center gap-4 bg-white border-2 border-gray-200 rounded-2xl py-4 px-6 text-gray-700 font-semibold hover:border-bossom-300 hover:bg-bossom-50 transition-all duration-200 disabled:opacity-50 shadow-sm hover:shadow-md"
-          >
-            <FcGoogle className="w-6 h-6" />
-            Continue with Google
-          </button>
-
-          <div className="relative my-8">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-6 bg-white text-gray-500 font-medium">Or create account with email</span>
-            </div>
-          </div>
-
           {/* Email Signup Form */}
           <form onSubmit={handleEmailSignup} className="space-y-5">
             <div>

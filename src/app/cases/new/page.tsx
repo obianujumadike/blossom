@@ -80,16 +80,34 @@ export default function NewCasePage() {
   const handleSubmit = async () => {
     setLoading(true)
     try {
-      // Here you would typically save to your database
-      console.log('Creating case with data:', patientData)
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      // Navigate to upload page or case list
-      router.push('/cases')
+      // Calculate age from DOB
+      const dob = new Date(patientData.dateOfBirth)
+      const age = Math.floor((Date.now() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000))
+
+      const res = await fetch('/api/cases', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          patientId: patientData.medicalRecordNumber,
+          patientAge: age,
+          patientGender: patientData.gender === 'female' ? 'Female' : patientData.gender === 'male' ? 'Male' : 'Other',
+          clinicalIndication: patientData.currentSymptoms || patientData.clinicalHistory || null,
+          referringPhysician: patientData.referringPhysician,
+          priority: 'normal',
+          studyType: 'Screening Mammogram',
+        }),
+      })
+
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || 'Failed to create case')
+      }
+
+      const newCase = await res.json()
+      router.push(`/cases/${newCase.id}/upload`)
     } catch (error) {
       console.error('Error creating case:', error)
+      alert(error instanceof Error ? error.message : 'Failed to create case')
     } finally {
       setLoading(false)
     }
