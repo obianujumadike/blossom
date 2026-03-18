@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { FaEye, FaEyeSlash } from 'react-icons/fa'
 import { BossomLogo } from '@/components/ui/BossomLogo'
@@ -8,6 +9,7 @@ import { componentStyles } from '@/lib/design-system'
 import { signInWithEmail } from '@/app/auth/actions'
 
 export default function LoginPage() {
+  const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -24,6 +26,8 @@ export default function LoginPage() {
       if (result?.error) {
         setError(result.error)
         setLoading(false)
+      } else if (result?.success) {
+        router.push('/dashboard')
       }
     } catch (error: any) {
       setError(error.message || 'Failed to sign in')

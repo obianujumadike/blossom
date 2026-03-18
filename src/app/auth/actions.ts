@@ -38,7 +38,7 @@ export async function signInWithEmail(formData: FormData) {
   if (error) return { error: error.message }
 
   revalidatePath('/', 'layout')
-  redirect('/dashboard')
+  return { success: true }
 }
 
 export async function signUpWithEmail(formData: FormData) {
