@@ -61,6 +61,10 @@ export async function POST(request: Request) {
     studyType,
     breastDensity,
     caseNotes,
+    clinicalHistory,
+    familyHistory,
+    medications,
+    priorMammograms,
   } = body
 
   if (!patientId || !patientAge) {
@@ -119,6 +123,17 @@ export async function POST(request: Request) {
 
   if (caseErr || !newCase) {
     return NextResponse.json({ error: 'Failed to create case' }, { status: 500 })
+  }
+
+  // Save clinical history if provided
+  if (clinicalHistory || familyHistory || medications || priorMammograms) {
+    await supabase.from('patient_clinical_history').insert({
+      patient_id: dbPatientId,
+      clinical_notes: clinicalHistory || null,
+      current_medications: medications || null,
+      previous_mammograms_results: priorMammograms !== 'unknown' ? priorMammograms : null,
+      risk_factors: familyHistory ? { family_history: familyHistory } : null,
+    })
   }
 
   return NextResponse.json(newCase, { status: 201 })

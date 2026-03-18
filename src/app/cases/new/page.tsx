@@ -95,6 +95,10 @@ export default function NewCasePage() {
           referringPhysician: patientData.referringPhysician,
           priority: 'normal',
           studyType: 'Screening Mammogram',
+          clinicalHistory: patientData.clinicalHistory || null,
+          familyHistory: patientData.familyHistory || null,
+          medications: patientData.medications || null,
+          priorMammograms: patientData.priorMammograms,
         }),
       })
 
