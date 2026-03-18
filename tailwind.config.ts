@@ -13,16 +13,31 @@ export default {
       colors: {
         // Bossom Brand Colors (Main pink from mockups)
         bossom: {
-          50: '#fef7f0',
-          100: '#feecdc', 
-          200: '#fcd9bd',
-          300: '#fdba8c',
-          400: '#ff8a4c',
+          25: '#fff5f8',
+          50: '#ffeef4',
+          100: '#ffd6e5',
+          200: '#ffadc9',
+          300: '#ff85ae',
+          400: '#ff5c92',
           500: '#ED205A',  // Main Bossom pink from designs
-          600: '#ea580c',
-          700: '#c2410c',
-          800: '#9a3412',
-          900: '#7c2d12',
+          600: '#c91a4d',
+          700: '#a51440',
+          800: '#810e33',
+          900: '#5d0826',
+        },
+        // Alias so both bossom-* and bossom-pink-* work identically
+        'bossom-pink': {
+          25: '#fff5f8',
+          50: '#ffeef4',
+          100: '#ffd6e5',
+          200: '#ffadc9',
+          300: '#ff85ae',
+          400: '#ff5c92',
+          500: '#ED205A',
+          600: '#c91a4d',
+          700: '#a51440',
+          800: '#810e33',
+          900: '#5d0826',
         },
         // Updated pink palette to match mockups
         pink: {

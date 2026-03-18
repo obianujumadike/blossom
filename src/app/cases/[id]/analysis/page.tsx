@@ -66,7 +66,7 @@ export default function AnalysisPage() {
     fetch(`/api/cases/${params.id}`)
       .then(r => r.json())
       .then(d => {
-        setCaseData(d)
+        setCaseData(d.data)
         setLoading(false)
       })
       .catch(() => setLoading(false))
@@ -84,7 +84,7 @@ export default function AnalysisPage() {
       toast.success('Analysis completed successfully!')
       // Refresh case data
       const updated = await fetch(`/api/cases/${params.id}`).then(r => r.json())
-      setCaseData(updated)
+      setCaseData(updated.data)
     } catch (err) {
       toast.error('Analysis failed. Please try again.')
     } finally {

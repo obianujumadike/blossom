@@ -40,7 +40,7 @@ export default function ProfilePage() {
   useEffect(() => {
     fetch('/api/profile')
       .then(r => r.json())
-      .then(data => {
+      .then(({ data }) => {
         setProfile(data)
         setForm({
           full_name: data.full_name || '',
@@ -62,7 +62,7 @@ export default function ProfilePage() {
         body: JSON.stringify(form),
       })
       if (!res.ok) throw new Error('Save failed')
-      const updated = await res.json()
+      const { data: updated } = await res.json()
       setProfile(prev => prev ? { ...prev, ...updated } : updated)
       setEditing(false)
       toast.success('Profile updated successfully')
