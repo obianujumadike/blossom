@@ -14,6 +14,7 @@ import {
   FaClock
 } from 'react-icons/fa'
 import { BossomLogo } from '@/components/ui/BossomLogo'
+import { Select } from '@/components/ui/Select'
 import { componentStyles } from '@/lib/design-system'
 
 interface CaseRecord {
@@ -56,7 +57,7 @@ function CasesContent() {
     setLoading(true)
     fetch(`/api/cases?${params}`)
       .then(r => r.json())
-      .then(d => setCases(Array.isArray(d) ? d : []))
+      .then(d => setCases(Array.isArray(d.data) ? d.data : []))
       .catch(() => setCases([]))
       .finally(() => setLoading(false))
   }, [statusFilter, priorityFilter, searchTerm])
@@ -143,31 +144,31 @@ function CasesContent() {
 
             {/* Status Filter */}
             <div className="sm:w-48">
-              <select
-                className={componentStyles.input.base}
+              <Select
+                options={[
+                  { value: 'all', label: 'All Statuses' },
+                  { value: 'pending', label: 'Pending' },
+                  { value: 'in_progress', label: 'In Progress' },
+                  { value: 'completed', label: 'Completed' },
+                ]}
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-              >
-                <option value="all">All Statuses</option>
-                <option value="pending">Pending</option>
-                <option value="in_progress">In Progress</option>
-                <option value="completed">Completed</option>
-              </select>
+                onChange={setStatusFilter}
+              />
             </div>
 
             {/* Priority Filter */}
             <div className="sm:w-48">
-              <select
-                className={componentStyles.input.base}
+              <Select
+                options={[
+                  { value: 'all', label: 'All Priorities' },
+                  { value: 'urgent', label: 'Urgent' },
+                  { value: 'high', label: 'High' },
+                  { value: 'normal', label: 'Normal' },
+                  { value: 'low', label: 'Low' },
+                ]}
                 value={priorityFilter}
-                onChange={(e) => setPriorityFilter(e.target.value)}
-              >
-                <option value="all">All Priorities</option>
-                <option value="urgent">Urgent</option>
-                <option value="high">High</option>
-                <option value="normal">Normal</option>
-                <option value="low">Low</option>
-              </select>
+                onChange={setPriorityFilter}
+              />
             </div>
           </div>
         </div>
