@@ -60,47 +60,53 @@ export default function UploadPage() {
     })
   }, [params.id])
 
-  const uploadFileToApi = async (uploadFile: UploadedFile) => {
+  const uploadFileToApi = (uploadFile: UploadedFile) => {
     const form = new FormData()
     form.append('file', uploadFile.file)
     form.append('laterality', 'Left')
 
-    // Progress simulation (real progress requires XMLHttpRequest)
-    const progressInterval = setInterval(() => {
-      setUploadedFiles(prev => prev.map(f =>
-        f.id === uploadFile.id && f.status === 'uploading'
-          ? { ...f, progress: Math.min(f.progress + 15, 90) }
-          : f
-      ))
-    }, 300)
+    const xhr = new XMLHttpRequest()
 
-    try {
-      const res = await fetch(`/api/cases/${params.id}/images`, {
-        method: 'POST',
-        body: form,
-      })
-
-      clearInterval(progressInterval)
-
-      if (!res.ok) {
-        const err = await res.json()
-        throw new Error(err.error || 'Upload failed')
+    xhr.upload.addEventListener('progress', (e) => {
+      if (e.lengthComputable) {
+        const percent = Math.round((e.loaded / e.total) * 90)
+        setUploadedFiles(prev => prev.map(f =>
+          f.id === uploadFile.id && f.status === 'uploading'
+            ? { ...f, progress: percent }
+            : f
+        ))
       }
+    })
 
-      const image = await res.json()
+    xhr.addEventListener('load', () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        const image = JSON.parse(xhr.responseText)
+        setUploadedFiles(prev => prev.map(f =>
+          f.id === uploadFile.id
+            ? { ...f, progress: 100, status: 'success' as const, serverImageId: image.id }
+            : f
+        ))
+      } else {
+        let errMsg = 'Upload failed'
+        try { errMsg = JSON.parse(xhr.responseText)?.error || errMsg } catch {}
+        setUploadedFiles(prev => prev.map(f =>
+          f.id === uploadFile.id
+            ? { ...f, status: 'error' as const, error: errMsg }
+            : f
+        ))
+      }
+    })
+
+    xhr.addEventListener('error', () => {
       setUploadedFiles(prev => prev.map(f =>
         f.id === uploadFile.id
-          ? { ...f, progress: 100, status: 'success' as const, serverImageId: image.id }
+          ? { ...f, status: 'error' as const, error: 'Network error during upload' }
           : f
       ))
-    } catch (err) {
-      clearInterval(progressInterval)
-      setUploadedFiles(prev => prev.map(f =>
-        f.id === uploadFile.id
-          ? { ...f, status: 'error' as const, error: err instanceof Error ? err.message : 'Upload failed' }
-          : f
-      ))
-    }
+    })
+
+    xhr.open('POST', `/api/cases/${params.id}/images`)
+    xhr.send(form)
   }
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
