@@ -79,8 +79,14 @@ export async function POST(request: Request) {
       })
       if (!resp.ok) throw new Error(`AI service returned ${resp.status}`)
       result = await resp.json()
+    } else if (process.env.NODE_ENV === 'production') {
+      await supabase.from('analyses').update({ analysis_status: 'failed' }).eq('id', analysis.id)
+      return NextResponse.json(
+        { error: 'AI model endpoint is not configured. Contact your administrator.' },
+        { status: 503 }
+      )
     } else {
-      // Mock result for MVP
+      // Mock result for development only
       const categories = [1, 2, 3, 4]
       const birads = categories[Math.floor(Math.random() * categories.length)]
       const confidence = 0.75 + Math.random() * 0.2
