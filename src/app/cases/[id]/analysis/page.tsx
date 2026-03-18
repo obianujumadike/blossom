@@ -89,6 +89,7 @@ export default function AnalysisPage() {
   }
 
   const latestAnalysis = caseData?.analyses?.find(a => a.analysis_status === 'completed')
+  const failedAnalysis = !latestAnalysis && caseData?.analyses?.some(a => a.analysis_status === 'failed')
   const rois = latestAnalysis?.regions_of_interest ?? []
   const selectedImage = caseData?.images?.[selectedImageIdx]
 
@@ -181,7 +182,16 @@ export default function AnalysisPage() {
               </div>
             ) : (
               <div className="text-center py-4">
-                <p className="text-gray-500 mb-4">No analysis results yet</p>
+                {failedAnalysis && (
+                  <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg text-left">
+                    <div className="flex items-center gap-2 text-red-700 text-sm font-medium">
+                      <FaExclamationTriangle className="w-4 h-4 flex-shrink-0" />
+                      Previous analysis failed
+                    </div>
+                    <p className="text-red-600 text-xs mt-1">Click below to retry.</p>
+                  </div>
+                )}
+                <p className="text-gray-500 mb-4">{failedAnalysis ? 'Analysis did not complete' : 'No analysis results yet'}</p>
                 {caseData.images.length > 0 && (
                   <button
                     onClick={() => runAnalysis(caseData.images[0].id)}
@@ -191,7 +201,7 @@ export default function AnalysisPage() {
                     {analyzing ? (
                       <><FaSpinner className="w-4 h-4 animate-spin" /> Analyzing...</>
                     ) : (
-                      <><FaPlay className="w-4 h-4" /> Run AI Analysis</>
+                      <><FaPlay className="w-4 h-4" /> {failedAnalysis ? 'Retry Analysis' : 'Run AI Analysis'}</>
                     )}
                   </button>
                 )}
