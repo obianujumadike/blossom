@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import { toast } from 'react-toastify'
+import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import { 
   FaArrowLeft, 
   FaExpand, 
@@ -56,6 +58,7 @@ export default function AnalysisPage() {
   const [loading, setLoading] = useState(true)
   const [analyzing, setAnalyzing] = useState(false)
   const [selectedImageIdx, setSelectedImageIdx] = useState(0)
+  const [rerunConfirm, setRerunConfirm] = useState<string | null>(null)
   const [zoom, setZoom] = useState(1)
   const [isFullscreen, setIsFullscreen] = useState(false)
 
@@ -78,11 +81,12 @@ export default function AnalysisPage() {
         body: JSON.stringify({ imageId, caseId: params.id }),
       })
       if (!res.ok) throw new Error('Analysis failed')
+      toast.success('Analysis completed successfully!')
       // Refresh case data
       const updated = await fetch(`/api/cases/${params.id}`).then(r => r.json())
       setCaseData(updated)
     } catch (err) {
-      alert('Analysis failed. Please try again.')
+      toast.error('Analysis failed. Please try again.')
     } finally {
       setAnalyzing(false)
     }
@@ -268,7 +272,7 @@ export default function AnalysisPage() {
           {latestAnalysis && caseData.images.length > 0 && (
             <div className="p-4 border-t border-gray-200">
               <button
-                onClick={() => runAnalysis(caseData.images[selectedImageIdx]?.id ?? caseData.images[0].id)}
+                onClick={() => setRerunConfirm(caseData.images[selectedImageIdx]?.id ?? caseData.images[0].id)}
                 disabled={analyzing}
                 className={`${componentStyles.button.secondary} w-full flex items-center justify-center gap-2`}
               >
@@ -351,6 +355,16 @@ export default function AnalysisPage() {
           </div>
         </div>
       </div>
+
+      <ConfirmModal
+        open={rerunConfirm !== null}
+        title="Re-run AI Analysis?"
+        message="This will run a new analysis and replace the current results. Are you sure?"
+        confirmLabel="Yes, Re-run"
+        variant="primary"
+        onConfirm={() => { if (rerunConfirm) { runAnalysis(rerunConfirm); setRerunConfirm(null) } }}
+        onCancel={() => setRerunConfirm(null)}
+      />
     </div>
   )
 }
