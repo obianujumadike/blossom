@@ -128,6 +128,41 @@ export default function DashboardPage() {
           <div className="flex items-center justify-center py-20">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-bossom-pink-600"></div>
           </div>
+        ) : data?.total_cases === 0 ? (
+          /* Empty state */
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <div className="w-24 h-24 bg-bossom-pink-50 rounded-full flex items-center justify-center mb-6 border-2 border-bossom-pink-100">
+              <svg className="w-12 h-12 text-bossom-pink-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-3-3v6m-7.5 3h15a1.5 1.5 0 001.5-1.5v-15A1.5 1.5 0 0019.5 3h-15A1.5 1.5 0 003 4.5v15A1.5 1.5 0 004.5 21z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">No cases yet</h2>
+            <p className="text-gray-500 max-w-sm mb-8">
+              Welcome{profile?.full_name ? `, Dr. ${profile.full_name.split(' ').pop()}` : ''}! Create your first case to start using AI-powered mammogram analysis.
+            </p>
+            <Link
+              href="/cases/new"
+              className={`${componentStyles.button.primary} flex items-center gap-2 text-base px-6 py-3`}
+            >
+              <FaPlus className="w-4 h-4" />
+              Create Your First Case
+            </Link>
+            <div className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-2xl w-full text-left">
+              {[
+                { icon: FaUsers, title: 'Register a Patient', desc: 'Enter patient demographics and medical history.' },
+                { icon: FaChartBar, title: 'Upload Mammograms', desc: 'Upload DICOM or image files for analysis.' },
+                { icon: FaCheckCircle, title: 'Get AI Analysis', desc: 'Receive instant BI-RADS scoring and ROI detection.' },
+              ].map(({ icon: Icon, title, desc }) => (
+                <div key={title} className={`${componentStyles.card.elevated} p-5`}>
+                  <div className="w-10 h-10 bg-bossom-pink-50 rounded-lg flex items-center justify-center mb-3">
+                    <Icon className="w-5 h-5 text-bossom-pink-500" />
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-1">{title}</h3>
+                  <p className="text-sm text-gray-500">{desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         ) : (
           <>
             {/* Stats Grid */}

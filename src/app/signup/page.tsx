@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai'
 import Link from 'next/link'
 import { BossomLogo } from '@/components/ui/BossomLogo'
+import { Select } from '@/components/ui/Select'
 import { signUpWithEmail } from '@/app/auth/actions'
 
 export default function SignupPage() {
@@ -12,6 +13,7 @@ export default function SignupPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [specializationValue, setSpecializationValue] = useState('Radiology')
 
   const handleEmailSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -122,18 +124,19 @@ export default function SignupPage() {
               <label htmlFor="specialization" className="block text-sm font-semibold text-gray-700 mb-2">
                 Specialization
               </label>
-              <select
+              <Select
                 id="specialization"
-                name="specialization"
-                defaultValue="Radiology"
+                options={[
+                  { value: 'Radiology', label: 'Radiology' },
+                  { value: 'Oncology', label: 'Oncology' },
+                  { value: 'Surgery', label: 'Surgery' },
+                  { value: 'General Practice', label: 'General Practice' },
+                ]}
+                value={specializationValue}
+                onChange={setSpecializationValue}
                 disabled={isLoading}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-bossom-500 focus:border-transparent outline-none transition-all duration-200 bg-gray-50 focus:bg-white text-gray-900"
-              >
-                <option value="Radiology">Radiology</option>
-                <option value="Oncology">Oncology</option>
-                <option value="Surgery">Surgery</option>
-                <option value="General Practice">General Practice</option>
-              </select>
+              />
+              <input type="hidden" name="specialization" value={specializationValue} />
             </div>
 
             <div>

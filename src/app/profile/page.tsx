@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { toast } from 'react-toastify'
 import { 
   FaArrowLeft,
   FaUser,
@@ -13,6 +14,7 @@ import {
   FaSpinner
 } from 'react-icons/fa'
 import { BossomLogo } from '@/components/ui/BossomLogo'
+import { Select } from '@/components/ui/Select'
 import { componentStyles } from '@/lib/design-system'
 
 interface Profile {
@@ -34,7 +36,6 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false)
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState({ full_name: '', specialization: '', hospital_affiliation: '', phone_number: '' })
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   useEffect(() => {
     fetch('/api/profile')
@@ -54,7 +55,6 @@ export default function ProfilePage() {
 
   const handleSave = async () => {
     setSaving(true)
-    setMessage(null)
     try {
       const res = await fetch('/api/profile', {
         method: 'PUT',
@@ -65,9 +65,9 @@ export default function ProfilePage() {
       const updated = await res.json()
       setProfile(prev => prev ? { ...prev, ...updated } : updated)
       setEditing(false)
-      setMessage({ type: 'success', text: 'Profile updated successfully' })
+      toast.success('Profile updated successfully')
     } catch {
-      setMessage({ type: 'error', text: 'Failed to save profile. Please try again.' })
+      toast.error('Failed to save profile. Please try again.')
     } finally {
       setSaving(false)
     }
@@ -108,12 +108,6 @@ export default function ProfilePage() {
       </div>
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {message && (
-          <div className={`mb-6 px-4 py-3 rounded-lg ${message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
-            {message.text}
-          </div>
-        )}
-
         <div className={componentStyles.card.elevated}>
           {/* Profile Header */}
           <div className="p-6 border-b border-gray-200 flex items-center justify-between">
@@ -167,20 +161,20 @@ export default function ProfilePage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Specialization</label>
               {editing ? (
-                <select
+                <Select
+                  options={[
+                    { value: '', label: 'Select...' },
+                    { value: 'Radiology', label: 'Radiology' },
+                    { value: 'Breast Imaging', label: 'Breast Imaging' },
+                    { value: 'Mammography', label: 'Mammography' },
+                    { value: 'Oncology', label: 'Oncology' },
+                    { value: 'Pathology', label: 'Pathology' },
+                    { value: 'Surgery', label: 'Surgery' },
+                    { value: 'Other', label: 'Other' },
+                  ]}
                   value={form.specialization}
-                  onChange={e => setForm(f => ({ ...f, specialization: e.target.value }))}
-                  className={componentStyles.input.base}
-                >
-                  <option value="">Select...</option>
-                  <option value="Radiology">Radiology</option>
-                  <option value="Breast Imaging">Breast Imaging</option>
-                  <option value="Mammography">Mammography</option>
-                  <option value="Oncology">Oncology</option>
-                  <option value="Pathology">Pathology</option>
-                  <option value="Surgery">Surgery</option>
-                  <option value="Other">Other</option>
-                </select>
+                  onChange={v => setForm(f => ({ ...f, specialization: v }))}
+                />
               ) : (
                 <p className="text-gray-900">{profile.specialization || '—'}</p>
               )}
@@ -247,7 +241,6 @@ export default function ProfilePage() {
                     hospital_affiliation: profile.hospital_affiliation || '',
                     phone_number: profile.phone_number || '',
                   })
-                  setMessage(null)
                 }}
                 className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
               >

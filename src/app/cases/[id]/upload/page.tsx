@@ -1,8 +1,10 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useDropzone } from 'react-dropzone'
+import { toast } from 'react-toastify'
+import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import { 
   FaArrowLeft, 
   FaUpload, 
@@ -37,6 +39,7 @@ export default function UploadPage() {
   const params = useParams()
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
   const [isProcessing, setIsProcessing] = useState(false)
+  const [removeConfirmId, setRemoveConfirmId] = useState<string | null>(null)
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const newFiles: UploadedFile[] = acceptedFiles.map((file) => ({
@@ -81,11 +84,17 @@ export default function UploadPage() {
     xhr.addEventListener('load', () => {
       if (xhr.status >= 200 && xhr.status < 300) {
         const image = JSON.parse(xhr.responseText)
-        setUploadedFiles(prev => prev.map(f =>
-          f.id === uploadFile.id
-            ? { ...f, progress: 100, status: 'success' as const, serverImageId: image.id }
-            : f
-        ))
+        setUploadedFiles(prev => {
+          const updated = prev.map(f =>
+            f.id === uploadFile.id
+              ? { ...f, progress: 100, status: 'success' as const, serverImageId: image.id }
+              : f
+          )
+          if (updated.every(f => f.status === 'success')) {
+            toast.success(`${updated.length} file${updated.length !== 1 ? 's' : ''} uploaded successfully!`)
+          }
+          return updated
+        })
       } else {
         let errMsg = 'Upload failed'
         try { errMsg = JSON.parse(xhr.responseText)?.error || errMsg } catch {}
@@ -94,6 +103,7 @@ export default function UploadPage() {
             ? { ...f, status: 'error' as const, error: errMsg }
             : f
         ))
+        toast.error(`Upload failed: ${errMsg}`)
       }
     })
 
@@ -120,6 +130,7 @@ export default function UploadPage() {
 
   const removeFile = (fileId: string) => {
     setUploadedFiles(prev => prev.filter(file => file.id !== fileId))
+    setRemoveConfirmId(null)
   }
 
   const handleStartAnalysis = () => {
@@ -315,7 +326,7 @@ export default function UploadPage() {
                       )}
                       
                       <button
-                        onClick={() => removeFile(uploadFile.id)}
+                        onClick={() => setRemoveConfirmId(uploadFile.id)}
                         className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                         title="Remove"
                       >
@@ -384,6 +395,16 @@ export default function UploadPage() {
           </div>
         </div>
       </div>
+
+      <ConfirmModal
+        open={removeConfirmId !== null}
+        title="Remove file?"
+        message="This file will be removed from the upload queue."
+        confirmLabel="Remove"
+        variant="danger"
+        onConfirm={() => removeConfirmId && removeFile(removeConfirmId)}
+        onCancel={() => setRemoveConfirmId(null)}
+      />
     </div>
   )
 }

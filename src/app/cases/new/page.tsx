@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'react-toastify'
 import { FaArrowLeft, FaUser, FaCalendarAlt, FaIdCard, FaPhone, FaMars, FaVenus } from 'react-icons/fa'
 import { BossomLogo } from '@/components/ui/BossomLogo'
 import { componentStyles } from '@/lib/design-system'
@@ -104,14 +105,15 @@ export default function NewCasePage() {
 
       if (!res.ok) {
         const err = await res.json()
-        throw new Error(err.error || 'Failed to create case')
+        throw new Error(err.error?.message || 'Failed to create case')
       }
 
-      const newCase = await res.json()
+      const { data: newCase } = await res.json()
+      toast.success('Case created successfully!')
       router.push(`/cases/${newCase.id}/upload`)
     } catch (error) {
       console.error('Error creating case:', error)
-      alert(error instanceof Error ? error.message : 'Failed to create case')
+      toast.error(error instanceof Error ? error.message : 'Failed to create case')
     } finally {
       setLoading(false)
     }
