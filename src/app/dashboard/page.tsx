@@ -44,7 +44,7 @@ export default function DashboardPage() {
   useEffect(() => {
     fetch('/api/dashboard')
       .then(r => r.json())
-      .then(d => setData(d))
+      .then(d => setData(d.data))
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
