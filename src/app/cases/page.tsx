@@ -3,15 +3,16 @@
 import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { 
-  FaPlus, 
-  FaSearch, 
-  FaEye, 
+import {
+  FaPlus,
+  FaSearch,
+  FaEye,
   FaUpload,
   FaUser,
   FaExclamationTriangle,
   FaCheckCircle,
-  FaClock
+  FaClock,
+  FaArrowLeft
 } from 'react-icons/fa'
 import { BossomLogo } from '@/components/ui/BossomLogo'
 import { Select } from '@/components/ui/Select'
@@ -108,6 +109,13 @@ function CasesContent() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
+              <button
+                onClick={() => router.push('/dashboard')}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Back to dashboard"
+              >
+                <FaArrowLeft className="w-5 h-5" />
+              </button>
               <BossomLogo size="sm" />
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Patient Cases</h1>

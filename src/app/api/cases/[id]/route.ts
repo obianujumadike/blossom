@@ -39,7 +39,13 @@ export async function GET(_request: Request, { params }: RouteParams) {
       return api.notFound('Case not found')
     }
 
-    return api.ok(data)
+    // Attach public storage URLs to each image
+    const images = (data.images ?? []).map((img: { file_path: string; [key: string]: unknown }) => {
+      const { data: urlData } = supabase.storage.from('mammograms').getPublicUrl(img.file_path)
+      return { ...img, publicUrl: urlData.publicUrl }
+    })
+
+    return api.ok({ ...data, images })
   } catch (err) {
     return api.serverError('Unexpected error in GET /api/cases/[id]', err)
   }

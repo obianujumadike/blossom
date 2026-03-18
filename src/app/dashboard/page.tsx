@@ -1,17 +1,20 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { 
-  FaPlus, 
-  FaEye, 
-  FaChartBar, 
-  FaClock, 
-  FaUsers, 
+import { useRouter } from 'next/navigation'
+import {
+  FaPlus,
+  FaEye,
+  FaChartBar,
+  FaClock,
+  FaUsers,
   FaExclamationTriangle,
   FaCheckCircle,
-  FaBell,
-  FaDownload
+  FaDownload,
+  FaUserCircle,
+  FaSignOutAlt,
+  FaIdCard
 } from 'react-icons/fa'
 import { BossomLogo } from '@/components/ui/BossomLogo'
 import { componentStyles } from '@/lib/design-system'
@@ -37,9 +40,27 @@ interface RecentCase {
 }
 
 export default function DashboardPage() {
-  const { profile } = useAuth()
+  const { profile, signOut } = useAuth()
+  const router = useRouter()
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const handleSignOut = async () => {
+    await signOut()
+    router.push('/login')
+  }
 
   useEffect(() => {
     fetch('/api/dashboard')
@@ -88,7 +109,7 @@ export default function DashboardPage() {
       case 'report_generated':
         return <FaDownload className="w-4 h-4" />
       default:
-        return <FaBell className="w-4 h-4" />
+        return <FaCheckCircle className="w-4 h-4" />
     }
   }
 
@@ -107,10 +128,47 @@ export default function DashboardPage() {
             </div>
             
             <div className="flex items-center gap-3">
-              <Link href="/profile" className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
-                <FaBell className="w-5 h-5" />
-              </Link>
-              
+              {/* User menu */}
+              <div className="relative" ref={menuRef}>
+                <button
+                  onClick={() => setMenuOpen(o => !o)}
+                  className="flex items-center gap-2 p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <FaUserCircle className="w-6 h-6" />
+                  {profile?.full_name && (
+                    <span className="hidden sm:block text-sm font-medium text-gray-700">
+                      Dr. {profile.full_name.split(' ').pop()}
+                    </span>
+                  )}
+                </button>
+
+                {menuOpen && (
+                  <div className="absolute right-0 mt-1 w-52 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden">
+                    <div className="px-4 py-3 border-b border-gray-100">
+                      <p className="text-xs text-gray-400">Signed in as</p>
+                      <p className="text-sm font-medium text-gray-900 truncate">{profile?.full_name || 'User'}</p>
+                    </div>
+                    <div className="py-1">
+                      <Link
+                        href="/profile"
+                        onClick={() => setMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        <FaIdCard className="w-4 h-4 text-gray-400" />
+                        My Profile
+                      </Link>
+                      <button
+                        onClick={handleSignOut}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <FaSignOutAlt className="w-4 h-4" />
+                        Sign Out
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <Link
                 href="/cases/new"
                 className={`${componentStyles.button.primary} flex items-center gap-2`}

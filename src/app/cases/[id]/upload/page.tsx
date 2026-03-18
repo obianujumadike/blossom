@@ -41,6 +41,12 @@ export default function UploadPage() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [removeConfirmId, setRemoveConfirmId] = useState<string | null>(null)
 
+  useEffect(() => {
+    if (uploadedFiles.length > 0 && uploadedFiles.every(f => f.status === 'success')) {
+      toast.success(`${uploadedFiles.length} file${uploadedFiles.length !== 1 ? 's' : ''} uploaded successfully!`)
+    }
+  }, [uploadedFiles])
+
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const newFiles: UploadedFile[] = acceptedFiles.map((file) => ({
       id: Math.random().toString(36).substr(2, 9),
@@ -83,21 +89,15 @@ export default function UploadPage() {
 
     xhr.addEventListener('load', () => {
       if (xhr.status >= 200 && xhr.status < 300) {
-        const image = JSON.parse(xhr.responseText)
-        setUploadedFiles(prev => {
-          const updated = prev.map(f =>
-            f.id === uploadFile.id
-              ? { ...f, progress: 100, status: 'success' as const, serverImageId: image.id }
-              : f
-          )
-          if (updated.every(f => f.status === 'success')) {
-            toast.success(`${updated.length} file${updated.length !== 1 ? 's' : ''} uploaded successfully!`)
-          }
-          return updated
-        })
+        const { data: image } = JSON.parse(xhr.responseText)
+        setUploadedFiles(prev => prev.map(f =>
+          f.id === uploadFile.id
+            ? { ...f, progress: 100, status: 'success' as const, serverImageId: image.id }
+            : f
+        ))
       } else {
         let errMsg = 'Upload failed'
-        try { errMsg = JSON.parse(xhr.responseText)?.error || errMsg } catch {}
+        try { errMsg = JSON.parse(xhr.responseText)?.error?.message || errMsg } catch {}
         setUploadedFiles(prev => prev.map(f =>
           f.id === uploadFile.id
             ? { ...f, status: 'error' as const, error: errMsg }

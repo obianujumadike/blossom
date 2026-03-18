@@ -22,6 +22,13 @@ interface CaseData {
   id: string
   case_number: string
   status: string
+  priority: string
+  study_date: string | null
+  study_type: string | null
+  breast_density: string | null
+  referring_physician: string | null
+  clinical_indication: string | null
+  is_urgent: boolean
   patients: { patient_id: string; age: number; gender: string } | null
   images: Array<{
     id: string
@@ -38,6 +45,7 @@ interface CaseData {
     malignancy_probability: number | null
     overall_assessment: string | null
     analysis_status: string
+    started_at: string | null
     regions_of_interest: Array<{
       id: string
       roi_type: string
@@ -61,6 +69,7 @@ export default function AnalysisPage() {
   const [rerunConfirm, setRerunConfirm] = useState<string | null>(null)
   const [zoom, setZoom] = useState(1)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [activeAnalysisId, setActiveAnalysisId] = useState<string | null>(null)
 
   useEffect(() => {
     fetch(`/api/cases/${params.id}`)
@@ -81,6 +90,8 @@ export default function AnalysisPage() {
         body: JSON.stringify({ imageId, caseId: params.id }),
       })
       if (!res.ok) throw new Error('Analysis failed')
+      const { data: analysisResult } = await res.json()
+      setActiveAnalysisId(analysisResult.analysisId)
       toast.success('Analysis completed successfully!')
       // Refresh case data
       const updated = await fetch(`/api/cases/${params.id}`).then(r => r.json())
@@ -92,7 +103,10 @@ export default function AnalysisPage() {
     }
   }
 
-  const latestAnalysis = caseData?.analyses?.find(a => a.analysis_status === 'completed')
+  const completedAnalyses = caseData?.analyses?.filter(a => a.analysis_status === 'completed') ?? []
+  const latestAnalysis =
+    (activeAnalysisId ? completedAnalyses.find(a => a.id === activeAnalysisId) : null) ??
+    completedAnalyses.sort((a, b) => (a.started_at ?? '').localeCompare(b.started_at ?? '')).at(-1)
   const failedAnalysis = !latestAnalysis && caseData?.analyses?.some(a => a.analysis_status === 'failed')
   const rois = latestAnalysis?.regions_of_interest ?? []
   const selectedImage = caseData?.images?.[selectedImageIdx]
@@ -167,19 +181,41 @@ export default function AnalysisPage() {
           {/* Overall Assessment */}
           <div className="p-6 border-b border-gray-200">
             {latestAnalysis ? (
-              <div className="text-center mb-4">
-                <div className={`inline-flex items-center px-4 py-2 rounded-full text-lg font-bold ${getBiradsColor(latestAnalysis.birads_category)}`}>
-                  BI-RADS {latestAnalysis.birads_category ?? '?'}
-                </div>
-                <div className="mt-2">
-                  <div className="text-2xl font-bold text-gray-900">
-                    {latestAnalysis.confidence_score ? `${Math.round(latestAnalysis.confidence_score * 100)}%` : 'N/A'}
+              <div>
+                <div className="text-center mb-4">
+                  <div className={`inline-flex items-center px-4 py-2 rounded-full text-lg font-bold ${getBiradsColor(latestAnalysis.birads_category)}`}>
+                    BI-RADS {latestAnalysis.birads_category ?? '?'}
                   </div>
-                  <div className="text-sm text-gray-600">Overall Confidence</div>
+                </div>
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="bg-gray-50 rounded-lg p-3 text-center">
+                    <div className="text-xl font-bold text-gray-900">
+                      {latestAnalysis.confidence_score != null ? `${Math.round(latestAnalysis.confidence_score * 100)}%` : 'N/A'}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-0.5">Confidence</div>
+                  </div>
+                  <div className={`rounded-lg p-3 text-center ${
+                    (latestAnalysis.malignancy_probability ?? 0) >= 0.5
+                      ? 'bg-red-50'
+                      : (latestAnalysis.malignancy_probability ?? 0) >= 0.2
+                      ? 'bg-yellow-50'
+                      : 'bg-green-50'
+                  }`}>
+                    <div className={`text-xl font-bold ${
+                      (latestAnalysis.malignancy_probability ?? 0) >= 0.5
+                        ? 'text-red-700'
+                        : (latestAnalysis.malignancy_probability ?? 0) >= 0.2
+                        ? 'text-yellow-700'
+                        : 'text-green-700'
+                    }`}>
+                      {latestAnalysis.malignancy_probability != null ? `${Math.round(latestAnalysis.malignancy_probability * 100)}%` : 'N/A'}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-0.5">Malignancy</div>
+                  </div>
                 </div>
                 {latestAnalysis.overall_assessment && (
-                  <div className="mt-3 text-sm text-gray-700">
-                    <div className="font-medium mb-1">Assessment:</div>
+                  <div className="text-sm text-gray-700 bg-gray-50 rounded-lg p-3">
+                    <div className="font-medium text-gray-500 text-xs uppercase tracking-wide mb-1">Assessment</div>
                     <div>{latestAnalysis.overall_assessment}</div>
                   </div>
                 )}
@@ -213,6 +249,35 @@ export default function AnalysisPage() {
             )}
           </div>
 
+          {/* Case Info */}
+          <div className="p-4 border-b border-gray-200">
+            <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              Case Info
+              {caseData.is_urgent && (
+                <span className="text-xs font-semibold bg-red-100 text-red-700 px-2 py-0.5 rounded-full">URGENT</span>
+              )}
+            </h3>
+            <div className="space-y-2 text-sm">
+              {[
+                { label: 'Patient', value: caseData.patients?.patient_id },
+                { label: 'Age / Sex', value: caseData.patients ? `${caseData.patients.age} yr • ${caseData.patients.gender}` : null },
+                { label: 'Study', value: caseData.study_type },
+                { label: 'Study Date', value: caseData.study_date ? new Date(caseData.study_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : null },
+                { label: 'Referring', value: caseData.referring_physician },
+                { label: 'Density', value: caseData.breast_density },
+                { label: 'Indication', value: caseData.clinical_indication },
+                { label: 'Priority', value: caseData.priority ? caseData.priority.charAt(0).toUpperCase() + caseData.priority.slice(1) : null },
+              ].map(({ label, value }) =>
+                value ? (
+                  <div key={label} className="flex justify-between gap-2">
+                    <span className="text-gray-400 shrink-0">{label}</span>
+                    <span className="text-gray-900 text-right">{value}</span>
+                  </div>
+                ) : null
+              )}
+            </div>
+          </div>
+
           {/* Image Selection */}
           <div className="p-4 border-b border-gray-200">
             <h3 className="font-semibold text-gray-900 mb-3">Images ({caseData.images.length})</h3>
@@ -243,28 +308,60 @@ export default function AnalysisPage() {
           </div>
 
           {/* ROIs */}
-          {rois.length > 0 && (
+          {latestAnalysis && (
             <div className="flex-1 overflow-y-auto p-4">
-              <h3 className="font-semibold text-gray-900 mb-3">Regions of Interest</h3>
-              <div className="space-y-2">
-                {rois.map((roi) => (
-                  <div key={roi.id} className="p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-start gap-2">
-                      <FaExclamationTriangle className="w-4 h-4 text-yellow-500 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">{roi.roi_type}</div>
-                        <div className="text-xs text-gray-600">
-                          Confidence: {Math.round(roi.confidence_score * 100)}%
-                          {roi.size_mm && ` • Size: ${roi.size_mm}mm`}
+              <h3 className="font-semibold text-gray-900 mb-3">
+                Regions of Interest {rois.length > 0 && <span className="text-xs font-normal text-gray-500">({rois.length} found)</span>}
+              </h3>
+              {rois.length === 0 ? (
+                <div className="text-center py-4">
+                  <div className="text-2xl mb-2">✓</div>
+                  <div className="text-sm font-medium text-green-700">No suspicious regions</div>
+                  <div className="text-xs text-gray-400 mt-1">No abnormalities detected in this scan</div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {rois.map((roi, i) => {
+                    const malignant = (roi.malignancy_probability ?? 0) >= 0.5
+                    const suspicious = (roi.malignancy_probability ?? 0) >= 0.2
+                    return (
+                      <div key={roi.id} className={`rounded-lg border p-3 ${malignant ? 'border-red-200 bg-red-50' : suspicious ? 'border-yellow-200 bg-yellow-50' : 'border-blue-200 bg-blue-50'}`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-1.5">
+                            <FaExclamationTriangle className={`w-3.5 h-3.5 ${malignant ? 'text-red-500' : suspicious ? 'text-yellow-500' : 'text-blue-500'}`} />
+                            <span className="text-sm font-semibold text-gray-900 capitalize">#{i + 1} {roi.roi_type}</span>
+                          </div>
+                          {roi.size_mm && <span className="text-xs text-gray-500">{roi.size_mm} mm</span>}
                         </div>
+                        <div className="grid grid-cols-2 gap-1.5 text-xs mb-2">
+                          <div className="bg-white/70 rounded px-2 py-1">
+                            <div className="text-gray-400">Confidence</div>
+                            <div className="font-semibold text-gray-800">{Math.round(roi.confidence_score * 100)}%</div>
+                          </div>
+                          <div className="bg-white/70 rounded px-2 py-1">
+                            <div className="text-gray-400">Malignancy</div>
+                            <div className={`font-semibold ${malignant ? 'text-red-700' : suspicious ? 'text-yellow-700' : 'text-green-700'}`}>
+                              {roi.malignancy_probability != null ? `${Math.round(roi.malignancy_probability * 100)}%` : 'N/A'}
+                            </div>
+                          </div>
+                        </div>
+                        {roi.characteristics && Object.keys(roi.characteristics).length > 0 && (
+                          <div className="flex flex-wrap gap-1 mb-2">
+                            {Object.entries(roi.characteristics).map(([k, v]) => (
+                              <span key={k} className="text-xs bg-white/70 text-gray-600 px-1.5 py-0.5 rounded capitalize">{v}</span>
+                            ))}
+                          </div>
+                        )}
                         {roi.clinical_significance && (
-                          <div className="text-xs text-gray-500 mt-1">{roi.clinical_significance}</div>
+                          <div className={`text-xs font-medium ${malignant ? 'text-red-700' : suspicious ? 'text-yellow-700' : 'text-blue-700'}`}>
+                            {roi.clinical_significance}
+                          </div>
                         )}
                       </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                    )
+                  })}
+                </div>
+              )}
             </div>
           )}
 

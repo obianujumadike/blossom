@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { api, log } from '@/lib/api/response'
 
 // GET /api/profile — get current user's profile
@@ -50,7 +50,7 @@ export async function PUT(request: Request) {
     const body = await request.json().catch(() => null)
     if (!body) return api.badRequest('Invalid request body')
 
-    const allowedFields = ['full_name', 'specialization', 'hospital_affiliation', 'phone_number']
+    const allowedFields = ['full_name', 'medical_license_number', 'specialization', 'hospital_affiliation', 'phone_number']
     const updates: Record<string, unknown> = {}
     for (const field of allowedFields) {
       if (body[field] !== undefined) updates[field] = body[field]
@@ -62,10 +62,10 @@ export async function PUT(request: Request) {
 
     log.info('PUT /api/profile', { userId: user.id, fields: Object.keys(updates) })
 
-    const { data, error } = await supabase
+    const admin = createAdminClient()
+    const { data, error } = await admin
       .from('users')
-      .update(updates)
-      .eq('id', user.id)
+      .upsert({ id: user.id, email: user.email, ...updates }, { onConflict: 'id' })
       .select()
       .single()
 
