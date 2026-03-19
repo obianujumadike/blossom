@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+
 import {
   FaPlus,
   FaEye,
@@ -41,7 +41,6 @@ interface RecentCase {
 
 export default function DashboardPage() {
   const { profile, signOut } = useAuth()
-  const router = useRouter()
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -59,7 +58,7 @@ export default function DashboardPage() {
 
   const handleSignOut = async () => {
     await signOut()
-    router.push('/login')
+    window.location.href = '/login'
   }
 
   useEffect(() => {
