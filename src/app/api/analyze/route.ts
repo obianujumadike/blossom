@@ -93,7 +93,7 @@ export async function POST(request: Request) {
           .getPublicUrl(imgData.file_path)
 
         const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-        if (process.env.GCLOUD_API_KEY) headers['Authorization'] = `Bearer ${process.env.GCLOUD_API_KEY}`
+        if (process.env.GCLOUD_API_KEY) headers['X-API-Key'] = process.env.GCLOUD_API_KEY
 
         const resp = await fetch(`${process.env.GCLOUD_MODEL_ENDPOINT}/analyze`, {
           method: 'POST',
