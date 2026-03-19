@@ -73,13 +73,14 @@ export default function AnalysisPage() {
 
   useEffect(() => {
     fetch(`/api/cases/${params.id}`)
-      .then(r => r.json())
-      .then(d => {
-        setCaseData(d.data)
-        setLoading(false)
+      .then(r => {
+        if (r.status === 401) { router.push('/login'); return null }
+        return r.json()
       })
-      .catch(() => setLoading(false))
-  }, [params.id])
+      .then(d => { if (d) setCaseData(d.data) })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [params.id, router])
 
   const runAnalysis = async (imageId: string) => {
     setAnalyzing(true)
@@ -89,14 +90,24 @@ export default function AnalysisPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ imageId, caseId: params.id }),
       })
+      if (res.status === 401) { router.push('/login'); return }
       if (!res.ok) throw new Error('Analysis failed')
       const { data: analysisResult } = await res.json()
+      // Inject result directly into state — no re-fetch needed
+      const newAnalysis = {
+        id: analysisResult.analysisId,
+        birads_category: analysisResult.birads_category,
+        confidence_score: analysisResult.confidence_score,
+        malignancy_probability: analysisResult.malignancy_probability,
+        overall_assessment: analysisResult.overall_assessment,
+        analysis_status: 'completed',
+        started_at: new Date().toISOString(),
+        regions_of_interest: [],
+      }
+      setCaseData(prev => prev ? { ...prev, analyses: [...(prev.analyses ?? []), newAnalysis] } : prev)
       setActiveAnalysisId(analysisResult.analysisId)
-      toast.success('Analysis completed successfully!')
-      // Refresh case data
-      const updated = await fetch(`/api/cases/${params.id}`).then(r => r.json())
-      setCaseData(updated.data)
-    } catch (err) {
+      toast.success('Analysis completed!')
+    } catch {
       toast.error('Analysis failed. Please try again.')
     } finally {
       setAnalyzing(false)
