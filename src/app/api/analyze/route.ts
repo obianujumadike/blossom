@@ -76,17 +76,40 @@ export async function POST(request: Request) {
         }>
       }
 
-      if (process.env.GCLOUD_MODEL_ENDPOINT && process.env.GCLOUD_API_KEY) {
-        const resp = await fetch(process.env.GCLOUD_MODEL_ENDPOINT, {
+      if (process.env.GCLOUD_MODEL_ENDPOINT) {
+        // Fetch the image's public URL from storage
+        const { data: imgData, error: imgErr } = await supabase
+          .from('images')
+          .select('file_path')
+          .eq('id', imageId)
+          .single()
+
+        if (imgErr || !imgData?.file_path) {
+          throw new Error(`Image not found: ${imgErr?.message ?? 'no file_path'}`)
+        }
+
+        const { data: urlData } = supabase.storage
+          .from('mammograms')
+          .getPublicUrl(imgData.file_path)
+
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+        if (process.env.GCLOUD_API_KEY) headers['Authorization'] = `Bearer ${process.env.GCLOUD_API_KEY}`
+
+        const resp = await fetch(`${process.env.GCLOUD_MODEL_ENDPOINT}/analyze`, {
           method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${process.env.GCLOUD_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ imageId }),
+          headers,
+          body: JSON.stringify({ image_url: urlData.publicUrl }),
         })
         if (!resp.ok) throw new Error(`AI service returned ${resp.status}`)
-        result = await resp.json()
+
+        const raw = await resp.json()
+        result = {
+          birads_category: raw.birads,
+          confidence_score: raw.confidence,
+          malignancy_probability: raw.malignancy_probability ?? 0,
+          overall_assessment: raw.findings_text,
+          regions: [],
+        }
       } else if (process.env.NODE_ENV === 'production') {
         await supabase.from('analyses').update({ analysis_status: 'failed' }).eq('id', analysis.id)
         return api.serviceUnavailable('AI model endpoint is not configured. Contact your administrator.')
