@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { FaEye, FaEyeSlash, FaCheckCircle } from 'react-icons/fa'
 import { BossomLogo } from '@/components/ui/BossomLogo'
 import { componentStyles } from '@/lib/design-system'
-import { updatePassword } from '@/app/auth/actions'
+import { createClient } from '@/lib/supabase/client'
 
 export default function ResetPasswordPage() {
   const router = useRouter()
@@ -17,18 +17,35 @@ export default function ResetPasswordPage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    const form = e.currentTarget
+    const password = (form.elements.namedItem('password') as HTMLInputElement).value
+    const confirm = (form.elements.namedItem('confirm') as HTMLInputElement).value
+
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters')
+      return
+    }
+    if (password !== confirm) {
+      setError('Passwords do not match')
+      return
+    }
+
     setLoading(true)
     setError('')
 
-    const formData = new FormData(e.currentTarget)
-    const result = await updatePassword(formData)
-
-    if (result.error) {
-      setError(result.error)
+    try {
+      const supabase = createClient()
+      const { error: sbError } = await supabase.auth.updateUser({ password })
+      if (sbError) {
+        setError(sbError.message)
+      } else {
+        setDone(true)
+        setTimeout(() => router.push('/dashboard'), 2500)
+      }
+    } catch (err) {
+      setError('Something went wrong. Please try again.')
+    } finally {
       setLoading(false)
-    } else {
-      setDone(true)
-      setTimeout(() => router.push('/dashboard'), 2500)
     }
   }
 
@@ -79,7 +96,6 @@ export default function ResetPasswordPage() {
                   id="password"
                   name="password"
                   required
-                  minLength={8}
                   disabled={loading}
                   className={`${componentStyles.input.base} pr-10 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                   placeholder="At least 8 characters"
@@ -105,7 +121,6 @@ export default function ResetPasswordPage() {
                   id="confirm"
                   name="confirm"
                   required
-                  minLength={8}
                   disabled={loading}
                   className={`${componentStyles.input.base} pr-10 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                   placeholder="Repeat your new password"

@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { FaArrowLeft, FaEnvelope } from 'react-icons/fa'
 import { BossomLogo } from '@/components/ui/BossomLogo'
 import { componentStyles } from '@/lib/design-system'
-import { resetPassword } from '@/app/auth/actions'
+import { createClient } from '@/lib/supabase/client'
 
 export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false)
@@ -15,17 +15,29 @@ export default function ForgotPasswordPage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    const trimmed = email.trim()
+    if (!trimmed) return
+
     setLoading(true)
     setError('')
 
-    const formData = new FormData(e.currentTarget)
-    const result = await resetPassword(formData)
-
-    if (result.error) {
-      setError(result.error)
-      setLoading(false)
-    } else {
-      setSent(true)
+    try {
+      const supabase = createClient()
+      const { error: sbError } = await supabase.auth.resetPasswordForEmail(trimmed, {
+        redirectTo: `${window.location.origin}/auth/callback?next=/auth/reset-password`,
+      })
+      if (sbError) {
+        if (sbError.message.includes('rate limit') || (sbError as any).code === 'over_email_send_rate_limit') {
+          setError('A reset link was already sent to this address. Please check your email or wait a few minutes before trying again.')
+        } else {
+          setError(sbError.message)
+        }
+      } else {
+        setSent(true)
+      }
+    } catch (err) {
+      setError('Something went wrong. Please try again.')
+    } finally {
       setLoading(false)
     }
   }
