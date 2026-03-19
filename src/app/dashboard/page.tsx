@@ -19,6 +19,7 @@ import {
 import { BossomLogo } from '@/components/ui/BossomLogo'
 import { componentStyles } from '@/lib/design-system'
 import { useAuth } from '@/lib/auth/context'
+import { signOut as serverSignOut } from '@/app/auth/actions'
 
 interface DashboardData {
   total_cases: number
@@ -57,8 +58,7 @@ export default function DashboardPage() {
   }, [])
 
   const handleSignOut = async () => {
-    await signOut()
-    window.location.href = '/login'
+    await serverSignOut()
   }
 
   useEffect(() => {
