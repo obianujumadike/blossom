@@ -13,7 +13,9 @@ import {
   FaPlay,
   FaExclamationTriangle,
   FaEye,
-  FaSpinner
+  FaSpinner,
+  FaCheckCircle,
+  FaTimes
 } from 'react-icons/fa'
 import { BossomLogo } from '@/components/ui/BossomLogo'
 import { componentStyles } from '@/lib/design-system'
@@ -70,6 +72,8 @@ export default function AnalysisPage() {
   const [zoom, setZoom] = useState(1)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [activeAnalysisId, setActiveAnalysisId] = useState<string | null>(null)
+  const [completing, setCompleting] = useState(false)
+  const [nextStepsModal, setNextStepsModal] = useState(false)
 
   useEffect(() => {
     fetch(`/api/cases/${params.id}`)
@@ -136,6 +140,79 @@ export default function AnalysisPage() {
     return 'border-green-500 bg-green-500/20'
   }
 
+  const getNextSteps = (birads: number | null) => {
+    if (!birads) return null
+    if (birads <= 2) return {
+      icon: '✅',
+      title: 'Routine Follow-Up',
+      color: 'green',
+      heading: 'No immediate action required.',
+      steps: [
+        'Schedule routine mammogram in 1–2 years.',
+        'Advise patient to perform regular self-examinations.',
+        'Document findings in patient record.',
+      ],
+    }
+    if (birads === 3) return {
+      icon: '🔁',
+      title: 'Short-Interval Follow-Up',
+      color: 'yellow',
+      heading: 'Benign appearance — close monitoring recommended.',
+      steps: [
+        'Schedule 6-month follow-up mammogram.',
+        'Correlate with any prior imaging if available.',
+        'Reassess at next appointment.',
+      ],
+    }
+    if (birads === 4) return {
+      icon: '⚠️',
+      title: 'Tissue Biopsy Recommended',
+      color: 'orange',
+      heading: 'Suspicious abnormality detected.',
+      steps: [
+        'Refer patient for tissue biopsy.',
+        'Expedite appointment within 2 weeks.',
+        'Notify referring physician of findings.',
+        'Document recommendation in patient record.',
+      ],
+    }
+    return {
+      icon: '🚨',
+      title: 'Urgent — Highly Suspicious',
+      color: 'red',
+      heading: 'Highly suggestive of malignancy.',
+      steps: [
+        'Arrange urgent specialist referral.',
+        'Contact patient within 24 hours.',
+        'Expedite biopsy and oncology consultation.',
+        'Notify referring physician immediately.',
+      ],
+    }
+  }
+
+  const markAsComplete = async () => {
+    if (!latestAnalysis) {
+      toast.error('Run AI analysis before marking as complete.')
+      return
+    }
+    setCompleting(true)
+    try {
+      const res = await fetch(`/api/cases/${params.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'completed' }),
+      })
+      if (res.status === 401) { router.push('/login'); return }
+      if (!res.ok) throw new Error('Failed to update case')
+      setCaseData(prev => prev ? { ...prev, status: 'completed' } : prev)
+      setNextStepsModal(true)
+    } catch {
+      toast.error('Failed to mark case as complete. Please try again.')
+    } finally {
+      setCompleting(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -175,6 +252,22 @@ export default function AnalysisPage() {
             </div>
             
             <div className="flex items-center gap-2">
+              {latestAnalysis && caseData.status !== 'completed' && (
+                <button
+                  onClick={markAsComplete}
+                  disabled={completing}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-60"
+                >
+                  {completing
+                    ? <><FaSpinner className="w-4 h-4 animate-spin" /> Saving...</>
+                    : <><FaCheckCircle className="w-4 h-4" /> Mark as Complete</>}
+                </button>
+              )}
+              {caseData.status === 'completed' && (
+                <span className="flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-700 text-sm font-medium rounded-lg">
+                  <FaCheckCircle className="w-3.5 h-3.5" /> Completed
+                </span>
+              )}
               <button
                 onClick={() => setIsFullscreen(!isFullscreen)}
                 className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
@@ -473,6 +566,86 @@ export default function AnalysisPage() {
         onConfirm={() => { if (rerunConfirm) { runAnalysis(rerunConfirm); setRerunConfirm(null) } }}
         onCancel={() => setRerunConfirm(null)}
       />
+
+      {/* Next Steps Modal */}
+      {nextStepsModal && latestAnalysis && (() => {
+        const ns = getNextSteps(latestAnalysis.birads_category)
+        if (!ns) return null
+        const colorMap = {
+          green:  { bg: 'bg-green-50',  border: 'border-green-200',  title: 'text-green-800',  badge: 'bg-green-100 text-green-700',  btn: 'bg-green-600 hover:bg-green-700' },
+          yellow: { bg: 'bg-yellow-50', border: 'border-yellow-200', title: 'text-yellow-800', badge: 'bg-yellow-100 text-yellow-700', btn: 'bg-yellow-600 hover:bg-yellow-700' },
+          orange: { bg: 'bg-orange-50', border: 'border-orange-200', title: 'text-orange-800', badge: 'bg-orange-100 text-orange-700', btn: 'bg-orange-600 hover:bg-orange-700' },
+          red:    { bg: 'bg-red-50',    border: 'border-red-200',    title: 'text-red-800',    badge: 'bg-red-100 text-red-700',      btn: 'bg-red-600 hover:bg-red-700' },
+        }
+        const c = colorMap[ns.color as keyof typeof colorMap]
+        return (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+              {/* Modal header */}
+              <div className={`${c.bg} ${c.border} border-b px-6 py-5`}>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="text-3xl mb-2">{ns.icon}</div>
+                    <h2 className={`text-xl font-bold ${c.title}`}>{ns.title}</h2>
+                    <p className="text-gray-600 text-sm mt-1">{ns.heading}</p>
+                  </div>
+                  <button onClick={() => setNextStepsModal(false)} className="p-1 text-gray-400 hover:text-gray-600">
+                    <FaTimes className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Result summary */}
+              <div className="px-6 pt-4 pb-2">
+                <div className="flex flex-wrap items-center gap-3 mb-4">
+                  <span className={`px-3 py-1 rounded-full text-sm font-bold ${getBiradsColor(latestAnalysis.birads_category)}`}>
+                    BI-RADS {latestAnalysis.birads_category}
+                  </span>
+                  {latestAnalysis.confidence_score != null && (
+                    <span className="text-sm text-gray-500">
+                      {Math.round(latestAnalysis.confidence_score * 100)}% confidence
+                    </span>
+                  )}
+                  {latestAnalysis.malignancy_probability != null && (
+                    <span className={`text-sm font-medium ${(latestAnalysis.malignancy_probability) >= 0.5 ? 'text-red-600' : 'text-green-600'}`}>
+                      {Math.round(latestAnalysis.malignancy_probability * 100)}% malignancy risk
+                    </span>
+                  )}
+                </div>
+
+                {/* Next steps list */}
+                <h3 className="font-semibold text-gray-800 mb-2">Recommended Next Steps</h3>
+                <ol className="space-y-2 mb-4">
+                  {ns.steps.map((step, i) => (
+                    <li key={i} className="flex gap-3 text-sm text-gray-700">
+                      <span className={`flex-shrink-0 w-5 h-5 rounded-full ${c.badge} flex items-center justify-center text-xs font-bold`}>
+                        {i + 1}
+                      </span>
+                      {step}
+                    </li>
+                  ))}
+                </ol>
+              </div>
+
+              {/* Footer actions */}
+              <div className="px-6 py-4 flex gap-3">
+                <button
+                  onClick={() => { setNextStepsModal(false); router.push('/dashboard') }}
+                  className={`flex-1 py-2.5 ${c.btn} text-white font-medium rounded-lg text-sm transition-colors`}
+                >
+                  Go to Dashboard
+                </button>
+                <button
+                  onClick={() => setNextStepsModal(false)}
+                  className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg text-sm transition-colors"
+                >
+                  Stay Here
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
     </div>
   )
 }
