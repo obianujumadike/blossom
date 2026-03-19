@@ -6,11 +6,13 @@ A clinical radiology platform for managing mammogram cases, running AI-assisted 
 
 ## What it does
 
-- **Case management** — create and manage patient mammogram cases with clinical metadata (study type, breast density, referring physician, priority)
+- **Case management** — create, track, and manage patient mammogram cases with full clinical metadata (study type, breast density, referring physician, priority, clinical indication)
 - **Image upload** — securely upload mammogram images to Supabase Storage
-- **AI analysis** — submit images for automated BI-RADS classification via the SensiNet inference service
-- **Results display** — view malignancy probability, confidence scores, and findings text per analysis; re-run analysis at any time
-- **Radiologist accounts** — authentication, profiles, password reset flow
+- **AI analysis** — submit images for automated BI-RADS classification via the SensiNet inference service, with Bayesian uncertainty estimation
+- **Results display** — view BI-RADS category, malignancy probability, confidence scores, and regions of interest; re-run analysis at any time
+- **Mark as Complete** — mark cases as completed after review; a BI-RADS-aware next-steps modal surfaces clinical guidance (routine follow-up, short-interval follow-up, biopsy, or urgent referral)
+- **Dashboard** — at-a-glance stats across all cases (total, in-progress, completed, urgent); clickable cards filter the case list
+- **Radiologist accounts** — email/password auth, profiles, onboarding flow, password reset
 - **Audit trail** — all analyses are persisted with timestamps and model version
 
 ---
@@ -31,8 +33,8 @@ The AI model powering the mammogram analysis is **not** authored by the Blossom 
 - [Supabase](https://supabase.com/) — Auth, PostgreSQL, Storage
 
 **AI inference**
-- [mammogram-inference-service](mammogram-inference-service/) — FastAPI microservice
-- Model: **SensiNet** (Xception + EfficientNet-B3 dual-stream, CBAM attention)
+- [mammogram-inference-service](mammogram-inference-service/) — FastAPI microservice deployed on [Hugging Face Spaces](https://huggingface.co/spaces/tampee/mammogram-analyzer)
+- Model: **SensiNet** (Xception + EfficientNet-B3 dual-stream, CBAM attention, Bayesian MC-Dropout)
 - Original model by [Aredeksu/SensiNet-Mammography](https://huggingface.co/Aredeksu/SensiNet-Mammography) (Apache-2.0)
 - Trained on: CBIS-DDSM mammography dataset
 
@@ -47,14 +49,15 @@ blossom/
 │   │   ├── api/              # Next.js API routes
 │   │   │   ├── analyze/      # POST /api/analyze — triggers AI inference
 │   │   │   ├── cases/        # CRUD for patient cases
+│   │   │   ├── dashboard/    # Dashboard stats aggregation
 │   │   │   └── profile/      # Radiologist profile management
-│   │   ├── cases/            # Case list and analysis pages
-│   │   ├── dashboard/        # Main dashboard
-│   │   ├── forgot-password/  # Password reset request
-│   │   └── auth/
-│   │       └── reset-password/  # Password reset confirmation
+│   │   ├── cases/            # Case list, analysis viewer, upload
+│   │   ├── dashboard/        # Main dashboard with case stats
+│   │   ├── onboarding/       # First-run onboarding flow
+│   │   └── auth/             # Login, signup, callback, password reset
 │   └── lib/
-│       └── supabase/         # Supabase client (browser, server, admin)
+│       ├── supabase/         # Supabase client (browser, server, middleware)
+│       └── auth/             # Auth context, guards, permissions
 └── mammogram-inference-service/  # Python FastAPI AI backend
 ```
 
@@ -66,7 +69,7 @@ blossom/
 
 - Node.js 20+
 - A [Supabase](https://supabase.com/) project
-- Python 3.10+ (for the inference service)
+- Python 3.10+ (only needed to run the inference service locally)
 
 ### 1. Install dependencies
 
@@ -76,19 +79,16 @@ npm install
 
 ### 2. Configure environment
 
-```bash
-cp .env.example .env.local
-```
-
-Fill in:
+Create `.env.local` in the project root:
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
-# Point to the running inference service
-GCLOUD_MODEL_ENDPOINT=http://localhost:8000
+# AI inference endpoint — use the hosted HF Space or run locally
+GCLOUD_MODEL_ENDPOINT=https://tampee-mammogram-analyzer.hf.space
+MODEL_API_KEY=your-api-key
 ```
 
 ### 3. Run the web app
@@ -97,9 +97,11 @@ GCLOUD_MODEL_ENDPOINT=http://localhost:8000
 npm run dev
 ```
 
-### 4. Run the AI inference service
+### 4. AI inference service
 
-See [mammogram-inference-service/README.md](mammogram-inference-service/README.md) for full setup instructions.
+The inference service is **hosted on Hugging Face Spaces** at `https://tampee-mammogram-analyzer.hf.space`. No local setup is required if you use the hosted endpoint.
+
+To run it locally instead:
 
 ```bash
 cd mammogram-inference-service
@@ -108,7 +110,9 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-The inference service runs in **mock mode** if model weights are not present — useful for UI development.
+Then set `GCLOUD_MODEL_ENDPOINT=http://localhost:8000` in `.env.local`.
+
+The inference service runs in **mock mode** if model weights are absent — useful for UI development without a GPU.
 
 ---
 
@@ -116,12 +120,12 @@ The inference service runs in **mock mode** if model weights are not present —
 
 The mammogram analysis feature is powered by **SensiNet**, a dual-stream deep learning model for mammographic classification.
 
-> **Original model:** [Aredeksu/SensiNet-Mammography](https://huggingface.co/Aredeksu/SensiNet-Mammography) on Hugging Face
-> **License:** Apache License 2.0
-> **Architecture:** Xception + EfficientNet-B3 with CBAM attention fusion
+> **Original model:** [Aredeksu/SensiNet-Mammography](https://huggingface.co/Aredeksu/SensiNet-Mammography) on Hugging Face  
+> **License:** Apache License 2.0  
+> **Architecture:** Xception + EfficientNet-B3 with CBAM attention fusion  
 > **Training data:** CBIS-DDSM (Curated Breast Imaging Subset of DDSM)
 
-The Blossom team did **not** design the SensiNet architecture or produce its weights. Our contribution is the FastAPI wrapper, Bayesian inference pipeline, training script adaptation, and integration with the Blossom clinical workflow. We use the model under its Apache 2.0 license, which requires this attribution.
+The Blossom team did **not** design the SensiNet architecture or produce its weights. Our contribution is the FastAPI wrapper, Bayesian MC-Dropout inference pipeline (10 stochastic passes), SSRF protection, and integration with the Blossom clinical workflow. We use the model under its Apache 2.0 license, which requires this attribution.
 
 ---
 
