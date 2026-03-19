@@ -63,8 +63,11 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetch('/api/dashboard')
-      .then(r => r.json())
-      .then(d => setData(d.data))
+      .then(r => {
+        if (r.status === 401) { window.location.replace('/login'); return null }
+        return r.json()
+      })
+      .then(d => { if (d) setData(d.data) })
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
@@ -224,7 +227,7 @@ export default function DashboardPage() {
           <>
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <div className={`${componentStyles.card.elevated} p-6`}>
+              <Link href="/cases" className={`${componentStyles.card.elevated} p-6 hover:shadow-md transition-shadow`}>
                 <div className="flex items-center">
                   <div className="flex-1">
                     <p className="text-sm font-medium text-gray-600">Total Cases</p>
@@ -234,9 +237,9 @@ export default function DashboardPage() {
                     <FaUsers className="w-6 h-6 text-blue-600" />
                   </div>
                 </div>
-              </div>
+              </Link>
 
-              <div className={`${componentStyles.card.elevated} p-6`}>
+              <Link href="/cases?status=pending" className={`${componentStyles.card.elevated} p-6 hover:shadow-md transition-shadow`}>
                 <div className="flex items-center">
                   <div className="flex-1">
                     <p className="text-sm font-medium text-gray-600">Pending Review</p>
@@ -246,9 +249,9 @@ export default function DashboardPage() {
                     <FaClock className="w-6 h-6 text-yellow-600" />
                   </div>
                 </div>
-              </div>
+              </Link>
 
-              <div className={`${componentStyles.card.elevated} p-6`}>
+              <Link href="/cases?status=in_progress" className={`${componentStyles.card.elevated} p-6 hover:shadow-md transition-shadow`}>
                 <div className="flex items-center">
                   <div className="flex-1">
                     <p className="text-sm font-medium text-gray-600">In Progress</p>
@@ -258,9 +261,9 @@ export default function DashboardPage() {
                     <FaChartBar className="w-6 h-6 text-blue-600" />
                   </div>
                 </div>
-              </div>
+              </Link>
 
-              <div className={`${componentStyles.card.elevated} p-6`}>
+              <Link href="/cases?status=completed" className={`${componentStyles.card.elevated} p-6 hover:shadow-md transition-shadow`}>
                 <div className="flex items-center">
                   <div className="flex-1">
                     <p className="text-sm font-medium text-gray-600">Completed</p>
@@ -270,7 +273,7 @@ export default function DashboardPage() {
                     <FaCheckCircle className="w-6 h-6 text-green-600" />
                   </div>
                 </div>
-              </div>
+              </Link>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -303,7 +306,7 @@ export default function DashboardPage() {
                         {data.recent_cases.map((c) => {
                           const birads = c.analyses?.find(a => a.birads_category !== null)
                           return (
-                            <div key={c.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                            <Link key={c.id} href={`/cases/${c.id}/analysis`} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                               <div className="flex-1">
                                 <div className="flex items-center gap-3 mb-2">
                                   <h3 className="font-medium text-gray-900">{c.case_number}</h3>
@@ -323,16 +326,8 @@ export default function DashboardPage() {
                                   )}
                                 </div>
                               </div>
-                              
-                              <div className="flex items-center gap-2 ml-4">
-                                <Link
-                                  href={`/cases/${c.id}/upload`}
-                                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-white rounded-lg transition-colors"
-                                >
-                                  <FaEye className="w-4 h-4" />
-                                </Link>
-                              </div>
-                            </div>
+                              <FaEye className="w-4 h-4 text-gray-400 ml-4 flex-shrink-0" />
+                            </Link>
                           )
                         })}
                       </div>
@@ -364,6 +359,14 @@ export default function DashboardPage() {
                       >
                         <FaExclamationTriangle className="w-4 h-4 text-gray-400" />
                         <span>Cases Pending Review</span>
+                      </Link>
+
+                      <Link
+                        href="/cases?status=in_progress"
+                        className="flex items-center gap-3 p-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                      >
+                        <FaChartBar className="w-4 h-4 text-gray-400" />
+                        <span>In Progress Cases</span>
                       </Link>
                       
                       <Link
