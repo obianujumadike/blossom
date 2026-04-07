@@ -281,7 +281,7 @@ export default function AnalysisPage() {
 
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar - Analysis Results */}
-        <div className="w-80 bg-white border-r border-gray-200 flex flex-col overflow-hidden">
+        {!isFullscreen && <div className="w-80 bg-white border-r border-gray-200 flex flex-col overflow-hidden">
           {/* Overall Assessment */}
           <div className="p-6 border-b border-gray-200">
             {latestAnalysis ? (
@@ -485,7 +485,7 @@ export default function AnalysisPage() {
               </button>
             </div>
           )}
-        </div>
+        </div>}
 
         {/* Main Viewer */}
         <div className="flex-1 bg-gray-900 flex flex-col">
