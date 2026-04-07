@@ -137,9 +137,9 @@ export default function TermsAndConditions() {
               <h2 className="text-xl font-semibold text-gray-900 mb-4">11. Contact Information</h2>
               <p>For questions about these Terms and Conditions, please contact:</p>
               <p className="mt-2">
-                Email: legal@blossom-ai.com<br/>
-                Address: [Your Business Address]<br/>
-                Phone: [Your Contact Number]
+                Email: <Link href="mailto:tamaraelaye2gmail.com"> Technical support</Link><br/>
+                {/* Address: [Your Business Address]<br/>
+                Phone: [Your Contact Number] */}
               </p>
             </section>
 

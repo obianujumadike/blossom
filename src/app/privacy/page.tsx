@@ -106,9 +106,7 @@ export default function PrivacyPolicy() {
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Contact Us</h2>
               <p>If you have questions about this Privacy Policy or your data rights, please contact us at:</p>
               <p className="mt-2">
-                Email: privacy@blossom-ai.com<br/>
-                Address: [Your Business Address]<br/>
-                Phone: [Your Contact Number]
+                Email: <a href="mailto:tamaraelaye2gmail.com" className="text-bossom-pink-600 hover:underline">Technical Support</a>
               </p>
             </section>
           </div>

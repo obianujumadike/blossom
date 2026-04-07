@@ -6,13 +6,13 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import {
   FaPlus,
   FaSearch,
-  FaEye,
   FaUpload,
   FaUser,
   FaExclamationTriangle,
   FaCheckCircle,
   FaClock,
-  FaArrowLeft
+  FaArrowLeft,
+  FaImages
 } from 'react-icons/fa'
 import { BossomLogo } from '@/components/ui/BossomLogo'
 import { Select } from '@/components/ui/Select'
@@ -260,23 +260,22 @@ function CasesContent() {
                           </span>
 
                           <div className="flex gap-2">
-                            <button
-                              onClick={() => router.push(`/cases/${c.id}/upload`)}
-                              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                              title={imageCount > 0 ? 'View Images' : 'Upload Images'}
-                            >
-                              <FaUpload className="w-4 h-4" />
-                            </button>
-                            
                             {imageCount > 0 && (
                               <button
                                 onClick={() => router.push(`/cases/${c.id}/analysis`)}
-                                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                                title="View Analysis"
+                                className="p-2 text-gray-400 hover:text-bossom-pink-600 hover:bg-bossom-pink-50 rounded-lg transition-colors"
+                                title="View Images & Analysis"
                               >
-                                <FaEye className="w-4 h-4" />
+                                <FaImages className="w-4 h-4" />
                               </button>
                             )}
+                            <button
+                              onClick={() => router.push(`/cases/${c.id}/upload`)}
+                              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                              title={imageCount > 0 ? 'Upload More Images' : 'Upload Images'}
+                            >
+                              <FaUpload className="w-4 h-4" />
+                            </button>
                           </div>
                         </div>
                       </div>
