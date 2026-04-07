@@ -28,7 +28,20 @@ export async function GET(request: Request) {
 
     if (status && status !== 'all') query = query.eq('status', status)
     if (priority && priority !== 'all') query = query.eq('priority', priority)
-    if (search) query = query.or(`case_number.ilike.%${search}%,clinical_indication.ilike.%${search}%`)
+    if (search) {
+      // Also search by patient MRN (patient_id on the patients table)
+      const { data: matchingPatients } = await supabase
+        .from('patients')
+        .select('id')
+        .ilike('patient_id', `%${search}%`)
+
+      const patientIds = (matchingPatients ?? []).map((p: { id: string }) => p.id)
+
+      const baseFilter = `case_number.ilike.%${search}%,clinical_indication.ilike.%${search}%`
+      query = patientIds.length > 0
+        ? query.or(`${baseFilter},patient_id.in.(${patientIds.join(',')})`)
+        : query.or(baseFilter)
+    }
 
     const { data, error } = await query
 
