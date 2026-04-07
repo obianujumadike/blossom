@@ -1,36 +1,11 @@
 import Link from 'next/link';
 import { BossomLogo } from '@/components/ui/BossomLogo';
+import { LandingNav } from '@/components/ui/LandingNav';
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-pink-50">
-      {/* Navigation */}
-      <nav className="flex justify-between items-center p-6 lg:px-8">
-        <div className="flex items-center space-x-3">
-          <BossomLogo size="md" />
-          <span className="text-2xl font-bold text-gray-900">Bossom</span>
-        </div>
-        <div className="flex items-center space-x-6">
-          {/* <Link
-            href="/cases"
-            className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
-          >
-            Cases
-          </Link> */}
-          <Link
-            href="/login"
-            className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
-          >
-            Sign In
-          </Link>
-          <Link
-            href="/signup"
-            className="bg-bossom-500 text-white px-6 py-2.5 rounded-full hover:bg-bossom-600 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl"
-          >
-            Get Started
-          </Link>
-        </div>
-      </nav>
+      <LandingNav />
 
       {/* Hero Section */}
       <div className="max-w-7xl mx-auto px-6 py-16 lg:py-24">
