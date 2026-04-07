@@ -5,7 +5,8 @@ import { api, log } from '@/lib/api/response'
 export async function GET() {
   try {
     const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError) return api.serverError('Auth service unavailable', authError)
     if (!user) return api.unauthorized()
 
     const { data, error } = await supabase
@@ -44,7 +45,8 @@ export async function GET() {
 export async function PUT(request: Request) {
   try {
     const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError) return api.serverError('Auth service unavailable', authError)
     if (!user) return api.unauthorized()
 
     const body = await request.json().catch(() => null)
