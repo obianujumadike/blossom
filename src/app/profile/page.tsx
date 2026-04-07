@@ -54,6 +54,14 @@ export default function ProfilePage() {
   }, [])
 
   const handleSave = async () => {
+    if (form.phone_number) {
+      const phonePattern = /^\+?[1-9]\d{6,14}$/
+      const cleaned = form.phone_number.replace(/[\s\-().]/g, '')
+      if (!phonePattern.test(cleaned)) {
+        toast.error('Please enter a valid phone number (e.g. +2348012345678)')
+        return
+      }
+    }
     setSaving(true)
     try {
       const res = await fetch('/api/profile', {
@@ -258,10 +266,8 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Account Info */}
         <div className="mt-6 text-sm text-gray-500 text-center">
-          Account created {new Date(profile.created_at).toLocaleDateString()} •{' '}
-          {profile.is_verified ? 'Verified ✓' : 'Pending verification'}
+          Account created {new Date(profile.created_at).toLocaleDateString()}
         </div>
       </div>
     </div>
