@@ -53,7 +53,9 @@ export default function SignupPage() {
         {/* Logo Section */}
         <div className="text-center mb-10">
           <div className="flex justify-center mb-6">
-            <BossomLogo size="xl" />
+            <Link href="/" className="hover:opacity-80 transition-opacity">
+              <BossomLogo size="xl" />
+            </Link>
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-3">Join Bossom</h1>
           <p className="text-gray-600 text-lg">Create your professional account</p>

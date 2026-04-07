@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { FaEye, FaEyeSlash, FaCheckCircle } from 'react-icons/fa'
+import Link from 'next/link'
 import { BossomLogo } from '@/components/ui/BossomLogo'
 import { componentStyles } from '@/lib/design-system'
 import { createClient } from '@/lib/supabase/client'
@@ -71,7 +72,9 @@ export default function ResetPasswordPage() {
         <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
 
           <div className="flex justify-center mb-6">
-            <BossomLogo size="lg" />
+            <Link href="/" className="hover:opacity-80 transition-opacity">
+              <BossomLogo size="lg" />
+            </Link>
           </div>
 
           <div className="mb-8">
