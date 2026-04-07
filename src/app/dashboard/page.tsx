@@ -11,10 +11,11 @@ import {
   FaUsers,
   FaExclamationTriangle,
   FaCheckCircle,
-  FaDownload,
   FaUserCircle,
   FaSignOutAlt,
-  FaIdCard
+  FaIdCard,
+  FaBars,
+  FaTimes
 } from 'react-icons/fa'
 import { BossomLogo } from '@/components/ui/BossomLogo'
 import { componentStyles } from '@/lib/design-system'
@@ -41,10 +42,11 @@ interface RecentCase {
 }
 
 export default function DashboardPage() {
-  const { profile, signOut } = useAuth()
+  const { profile, user } = useAuth()
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -109,7 +111,7 @@ export default function DashboardPage() {
       case 'review_submitted':
         return <FaEye className="w-4 h-4" />
       case 'report_generated':
-        return <FaDownload className="w-4 h-4" />
+        return <FaChartBar className="w-4 h-4" />
       default:
         return <FaCheckCircle className="w-4 h-4" />
     }
@@ -130,6 +132,15 @@ export default function DashboardPage() {
             </div>
             
             <div className="flex items-center gap-3">
+              {/* Mobile hamburger */}
+              <button
+                onClick={() => setMobileNavOpen(o => !o)}
+                className="sm:hidden p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Open menu"
+              >
+                {mobileNavOpen ? <FaTimes className="w-5 h-5" /> : <FaBars className="w-5 h-5" />}
+              </button>
+
               {/* User menu */}
               <div className="relative" ref={menuRef}>
                 <button
@@ -137,18 +148,16 @@ export default function DashboardPage() {
                   className="flex items-center gap-2 p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   <FaUserCircle className="w-6 h-6" />
-                  {profile?.full_name && (
-                    <span className="hidden sm:block text-sm font-medium text-gray-700">
-                      Dr. {profile.full_name.split(' ').pop()}
-                    </span>
-                  )}
+                  <span className="hidden sm:block text-sm font-medium text-gray-700">
+                    {profile?.full_name ? `Dr. ${profile.full_name.split(' ').pop()}` : user?.email?.split('@')[0] ?? ''}
+                  </span>
                 </button>
 
                 {menuOpen && (
                   <div className="absolute right-0 mt-1 w-52 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden">
                     <div className="px-4 py-3 border-b border-gray-100">
                       <p className="text-xs text-gray-400">Signed in as</p>
-                      <p className="text-sm font-medium text-gray-900 truncate">{profile?.full_name || 'User'}</p>
+                      <p className="text-sm font-medium text-gray-900 truncate">{profile?.full_name || user?.email || 'User'}</p>
                     </div>
                     <div className="py-1">
                       <Link
@@ -182,6 +191,33 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Mobile nav drawer */}
+      {mobileNavOpen && (
+        <div className="sm:hidden bg-white border-b border-gray-200 px-4 py-4 space-y-1">
+          <Link href="/cases/new" onClick={() => setMobileNavOpen(false)} className="flex items-center gap-3 p-3 text-gray-700 hover:bg-gray-50 rounded-lg">
+            <FaPlus className="w-4 h-4 text-gray-400" /> New Case
+          </Link>
+          <Link href="/cases" onClick={() => setMobileNavOpen(false)} className="flex items-center gap-3 p-3 text-gray-700 hover:bg-gray-50 rounded-lg">
+            <FaUsers className="w-4 h-4 text-gray-400" /> All Cases
+          </Link>
+          <Link href="/cases?status=pending" onClick={() => setMobileNavOpen(false)} className="flex items-center gap-3 p-3 text-gray-700 hover:bg-gray-50 rounded-lg">
+            <FaExclamationTriangle className="w-4 h-4 text-gray-400" /> Pending Review
+          </Link>
+          <Link href="/cases?status=in_progress" onClick={() => setMobileNavOpen(false)} className="flex items-center gap-3 p-3 text-gray-700 hover:bg-gray-50 rounded-lg">
+            <FaChartBar className="w-4 h-4 text-gray-400" /> In Progress
+          </Link>
+          <Link href="/cases?status=completed" onClick={() => setMobileNavOpen(false)} className="flex items-center gap-3 p-3 text-gray-700 hover:bg-gray-50 rounded-lg">
+            <FaCheckCircle className="w-4 h-4 text-gray-400" /> Completed
+          </Link>
+          <Link href="/profile" onClick={() => setMobileNavOpen(false)} className="flex items-center gap-3 p-3 text-gray-700 hover:bg-gray-50 rounded-lg">
+            <FaIdCard className="w-4 h-4 text-gray-400" /> My Profile
+          </Link>
+          <button onClick={handleSignOut} className="w-full flex items-center gap-3 p-3 text-red-600 hover:bg-red-50 rounded-lg">
+            <FaSignOutAlt className="w-4 h-4" /> Sign Out
+          </button>
+        </div>
+      )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {loading ? (
@@ -381,7 +417,7 @@ export default function DashboardPage() {
                         href="/profile"
                         className="flex items-center gap-3 p-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
                       >
-                        <FaDownload className="w-4 h-4 text-gray-400" />
+                        <FaIdCard className="w-4 h-4 text-gray-400" />
                         <span>My Profile</span>
                       </Link>
                     </div>
