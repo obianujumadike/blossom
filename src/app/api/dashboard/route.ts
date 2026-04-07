@@ -10,27 +10,6 @@ export async function GET() {
 
     log.info('GET /api/dashboard', { userId: user.id })
 
-    // Try the DB view first
-    const { data: summary, error: summaryErr } = await supabase
-      .from('dashboard_summary')
-      .select('*')
-      .eq('radiologist_id', user.id)
-      .single()
-
-    if (summaryErr && summaryErr.code !== 'PGRST116') {
-      log.warn('dashboard_summary view error, falling back to manual query', {
-        userId: user.id,
-        dbCode: summaryErr.code,
-        dbMessage: summaryErr.message,
-      })
-    }
-
-    if (summary) {
-      return api.ok(summary)
-    }
-
-    log.info('Dashboard summary view miss, computing manually', { userId: user.id })
-
     const [
       { count: totalCases, error: e1 },
       { count: pendingCases, error: e2 },
@@ -55,7 +34,7 @@ export async function GET() {
       ['completed_cases', e4], ['recent_cases', e5],
     ] as const) {
       if (err) {
-        log.warn(`Dashboard fallback query failed for ${label}`, {
+        log.warn(`Dashboard query failed for ${label}`, {
           userId: user.id,
           dbCode: (err as { code?: string }).code,
         })
