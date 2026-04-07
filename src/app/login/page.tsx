@@ -44,7 +44,9 @@ function LoginForm() {
           {/* Logo and Title */}
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
-              <BossomLogo size="lg" />
+              <Link href="/" className="hover:opacity-80 transition-opacity">
+                <BossomLogo size="lg" />
+              </Link>
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Welcome Back</h1>
             <p className="text-gray-600">Sign in to your Bossom account</p>

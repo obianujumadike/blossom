@@ -49,7 +49,9 @@ export default function ForgotPasswordPage() {
 
           {/* Logo */}
           <div className="flex justify-center mb-6">
-            <BossomLogo size="lg" />
+            <Link href="/" className="hover:opacity-80 transition-opacity">
+              <BossomLogo size="lg" />
+            </Link>
           </div>
 
           {sent ? (
