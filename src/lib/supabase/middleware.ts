@@ -36,15 +36,13 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   // Protect routes that require authentication
-  const protectedRoutes = ['/dashboard', '/cases', '/profile', '/settings', '/reports', '/notifications', '/compliance', '/verification', '/onboarding', '/forbidden']
+  const protectedRoutes = ['/dashboard', '/cases', '/profile', '/settings', '/reports', '/notifications', '/compliance', '/verification', '/onboarding']
   const isProtectedRoute = protectedRoutes.some(route => request.nextUrl.pathname.startsWith(route))
 
   if (!user && isProtectedRoute) {
-    // Redirect to 403 page with authentication required reason
     const url = request.nextUrl.clone()
-    url.pathname = '/forbidden'
-    url.searchParams.set('reason', 'not_authenticated')
-    url.searchParams.set('return', request.nextUrl.pathname)
+    url.pathname = '/login'
+    url.searchParams.set('next', request.nextUrl.pathname)
     return NextResponse.redirect(url)
   }
 
