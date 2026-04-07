@@ -1,15 +1,17 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { FaEye, FaEyeSlash } from 'react-icons/fa'
 import { BossomLogo } from '@/components/ui/BossomLogo'
 import { componentStyles } from '@/lib/design-system'
 import { signInWithEmail } from '@/app/auth/actions'
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const next = searchParams.get('next') || '/dashboard'
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -18,16 +20,16 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true)
     setError('')
-    
+
     try {
       const formData = new FormData(e.currentTarget)
       const result = await signInWithEmail(formData)
-      
+
       if (result?.error) {
         setError(result.error)
         setLoading(false)
       } else if (result?.success) {
-        router.push('/dashboard')
+        router.push(next)
       }
     } catch (error: any) {
       setError(error.message || 'Failed to sign in')
@@ -152,5 +154,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-white via-bossom-pink-50 to-bossom-pink-100 flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-bossom-pink-600"></div></div>}>
+      <LoginForm />
+    </Suspense>
   )
 }
