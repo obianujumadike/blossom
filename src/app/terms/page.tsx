@@ -11,7 +11,7 @@ export default function TermsAndConditions() {
         <div className="max-w-4xl mx-auto px-6 py-4">
           <Link href="/" className="inline-flex items-center hover:opacity-80 transition-opacity">
             <BossomLogo className="h-8" />
-            <span className="ml-3 text-xl font-semibold text-gray-900">Blossom</span>
+            <span className="ml-3 text-xl font-semibold text-gray-900">Bossom</span>
           </Link>
         </div>
       </header>
@@ -38,12 +38,12 @@ export default function TermsAndConditions() {
 
             <section>
               <h2 className="text-xl font-semibold text-gray-900 mb-4">1. Acceptance of Terms</h2>
-              <p>By accessing and using Blossom ("the Platform"), you agree to be bound by these Terms and Conditions. If you do not agree to these terms, please do not use our service.</p>
+              <p>By accessing and using Bossom ("the Platform"), you agree to be bound by these Terms and Conditions. If you do not agree to these terms, please do not use our service.</p>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-gray-900 mb-4">2. Service Description</h2>
-              <p className="mb-4">Blossom provides AI-assisted mammography image analysis tools designed to:</p>
+              <p className="mb-4">Bossom provides AI-assisted mammography image analysis tools designed to:</p>
               <ul className="list-disc pl-6 space-y-1">
                 <li>Assist healthcare professionals in mammography interpretation</li>
                 <li>Provide educational insights about mammographic findings</li>
@@ -120,7 +120,7 @@ export default function TermsAndConditions() {
 
             <section>
               <h2 className="text-xl font-semibold text-gray-900 mb-4">8. Indemnification</h2>
-              <p>You agree to indemnify and hold harmless Blossom and its affiliates from any claims, damages, or expenses arising from your use of the Platform, violation of these Terms, or infringement of any rights of another party.</p>
+              <p>You agree to indemnify and hold harmless Bossom and its affiliates from any claims, damages, or expenses arising from your use of the Platform, violation of these Terms, or infringement of any rights of another party.</p>
             </section>
 
             <section>

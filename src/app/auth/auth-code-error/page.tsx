@@ -56,8 +56,8 @@ export default function AuthCodeError() {
           {/* Support */}
           <p className="text-xs text-gray-500 text-center mt-6">
             Still having trouble? Contact support at{' '}
-            <a href="mailto:support@blossom-ai.com" className="text-bossom-pink-600 hover:underline">
-              support@blossom-ai.com
+            <a href="mailto:support@bossom-ai.com" className="text-bossom-pink-600 hover:underline">
+              support@bossom-ai.com
             </a>
           </p>
         </div>

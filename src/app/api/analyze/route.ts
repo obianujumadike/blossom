@@ -42,7 +42,7 @@ export async function POST(request: Request) {
       .insert({
         case_id: caseId,
         image_id: imageId,
-        model_version: 'blossom-v1',
+        model_version: 'bossom-v1',
         analysis_status: 'processing',
         started_at: new Date().toISOString(),
       })
